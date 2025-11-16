@@ -137,6 +137,7 @@
             transition: all 0.3s;
             padding: 0.3rem;
             font-size: 0.85rem;
+            position: relative;
         }
 
         .calendar-day:hover:not(.blocked):not(.past) {
@@ -166,6 +167,17 @@
             background: #fff3cd !important;
             border-color: #ffc107 !important;
             border-width: 3px !important;
+        }
+
+        .calendar-day.range-start {
+            background: #c8e6c9 !important;
+            border-color: #4caf50 !important;
+            border-width: 3px !important;
+        }
+
+        .calendar-day.range-hover {
+            background: #e8f5e9 !important;
+            border-color: #81c784 !important;
         }
 
         .precio-dia {
@@ -231,6 +243,30 @@
         .form-group select:focus {
             outline: none;
             border-color: var(--color-principal);
+        }
+
+        .form-group input.invalid {
+            border-color: #f44336;
+        }
+
+        .form-group input.valid {
+            border-color: #4caf50;
+        }
+
+        .validation-message {
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+            display: none;
+        }
+
+        .validation-message.error {
+            color: #f44336;
+            display: block;
+        }
+
+        .validation-message.success {
+            color: #4caf50;
+            display: block;
         }
 
         .form-group textarea {
@@ -426,6 +462,31 @@
             margin: 1rem 0;
         }
 
+        .context-menu {
+            position: fixed;
+            background: white;
+            border: 2px solid var(--color-principal);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: none;
+        }
+
+        .context-menu.show {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .context-menu-item:hover {
+            background: var(--color-fondo);
+        }
+
         .reservas-list {
             margin-top: 1rem;
         }
@@ -479,10 +540,6 @@
 </head>
 <body>
     <script>
-        // ========================================
-        // 🔧 CONFIGURACIÓN - MODIFICA AQUÍ TUS DATOS
-        // ========================================
-        
         const ADMIN_PASSWORD = "micampo2025";
 
         const CONFIG = {
@@ -500,10 +557,6 @@
             }
         };
 
-        // ========================================
-        // 📅 FECHAS BLOQUEADAS - AÑADE/QUITA AQUÍ
-        // Formato: "YYYY-MM-DD"
-        // ========================================
         let fechasBloqueadas = [
             "2025-12-24",
             "2025-12-25",
@@ -511,20 +564,18 @@
             "2026-01-01"
         ];
 
-        // ========================================
-        // 💰 PRECIOS PERSONALIZADOS - AÑADE AQUÍ
-        // Formato: "YYYY-MM-DD": precio
-        // ========================================
         let preciosPersonalizados = {
             "2025-12-24": 200,
             "2025-12-31": 250
         };
 
-        // Variables globales
         let modoAdmin = false;
         let mesActual = new Date();
-        let fechasSeleccionadas = [];
         let reservas = JSON.parse(localStorage.getItem('reservas')) || [];
+        let rangoInicio = null;
+        let rangoSeleccionando = false;
+        let fechaContextMenu = null;
+        let archivoJustificante = null;
     </script>
 
     <header>
@@ -538,26 +589,12 @@
             <section class="section">
                 <div class="admin-controls">
                     <h3>🔧 Panel de Administración</h3>
-                    <p>✅ Modo administrador activado. Los cambios se guardan automáticamente en tu navegador.</p>
-                    
-                    <div id="selectionInfo" class="selection-info" style="display: none;">
-                        <strong>Fechas seleccionadas:</strong> <span id="selectionCount">0</span>
-                        <div id="selectionList" style="margin-top: 0.5rem; font-size: 0.9rem;"></div>
-                    </div>
+                    <p>✅ Haz <strong>clic derecho</strong> en cualquier día para gestionar | <strong>2 clics</strong> para seleccionar rango</p>
                     
                     <div class="control-buttons">
                         <button class="btn btn-secondary" onclick="cerrarAdmin()">👁️ Modo Cliente</button>
-                        <button class="btn btn-danger" onclick="bloquearSeleccionadas()">🔴 Bloquear Fechas</button>
-                        <button class="btn" onclick="asignarPrecioSeleccionadas()">💰 Asignar Precio</button>
-                        <button class="btn btn-secondary" onclick="limpiarSeleccion()">🗑️ Limpiar</button>
-                    </div>
-                    
-                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #ffc107;">
-                        <h4 style="color: #856404; margin-bottom: 0.5rem;">📋 Gestión de Reservas</h4>
-                        <div class="control-buttons">
-                            <button class="btn" onclick="mostrarReservas()">📋 Ver Reservas (<span id="totalReservas">0</span>)</button>
-                            <button class="btn btn-secondary" onclick="descargarReservas()">💾 Descargar Excel</button>
-                        </div>
+                        <button class="btn" onclick="mostrarReservas()">📋 Ver Reservas (<span id="totalReservas">0</span>)</button>
+                        <button class="btn btn-secondary" onclick="descargarReservas()">💾 Descargar Excel</button>
                     </div>
                 </div>
             </section>
@@ -587,6 +624,9 @@
 
         <section class="section">
             <h2>📅 Calendario de Disponibilidad</h2>
+            <p style="text-align: center; color: var(--color-secundario); margin-bottom: 1rem;">
+                💡 Haz clic en las fechas para seleccionar tu estancia
+            </p>
             <div class="month-selector">
                 <button onclick="cambiarMes(-1)">← Anterior</button>
                 <h3 id="mesActual"></h3>
@@ -613,7 +653,8 @@
                     </div>
                     <div class="form-group">
                         <label for="dni">DNI/NIE *</label>
-                        <input type="text" id="dni" placeholder="12345678A" required>
+                        <input type="text" id="dni" placeholder="12345678A" required maxlength="9">
+                        <div id="dniValidation" class="validation-message"></div>
                     </div>
                 </div>
 
@@ -635,13 +676,15 @@
                     </div>
                     <div class="form-group">
                         <label for="fechaEntrada">Fecha de entrada *</label>
-                        <input type="date" id="fechaEntrada" required>
+                        <input type="date" id="fechaEntrada" required readonly>
+                        <small style="color: #666;">Selecciona en el calendario</small>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="fechaSalida">Fecha de salida *</label>
-                    <input type="date" id="fechaSalida" required>
+                    <input type="date" id="fechaSalida" required readonly>
+                    <small style="color: #666;">Selecciona en el calendario</small>
                 </div>
 
                 <div class="form-group">
@@ -657,9 +700,6 @@
                         <p style="font-size: 0.9rem; color: #666;">Formatos: JPG, PNG, PDF (Máx. 5MB)</p>
                         <div class="file-name" id="fileName"></div>
                     </div>
-                    <p style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">
-                        💡 El justificante se descargará junto con tus datos de reserva
-                    </p>
                 </div>
 
                 <div id="resumenReserva" style="background: var(--color-fondo); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: none;">
@@ -670,7 +710,7 @@
                 </div>
                 
                 <button type="submit" class="btn">
-                    🚀 Enviar Solicitud de Reserva
+                    📧 Enviar Reserva por Email
                 </button>
             </form>
         </section>
@@ -695,6 +735,12 @@
                 ℹ️ Realiza la transferencia de la señal y adjunta el justificante en el formulario
             </p>
         </section>
+    </div>
+
+    <div id="contextMenu" class="context-menu">
+        <div class="context-menu-item" onclick="bloquearFechaContexto()">🔴 Bloquear fecha</div>
+        <div class="context-menu-item" onclick="desbloquearFechaContexto()">🟢 Desbloquear fecha</div>
+        <div class="context-menu-item" onclick="asignarPrecioContexto()">💰 Asignar precio</div>
     </div>
 
     <div id="modalLoginAdmin" class="modal">
@@ -742,7 +788,6 @@
     </footer>
 
     <script>
-        // Inicializar
         document.getElementById('headerNombre').textContent = CONFIG.nombreCampo;
         document.getElementById('headerDescripcion').textContent = CONFIG.descripcion;
         document.getElementById('infoCapacidad').textContent = CONFIG.capacidad;
@@ -756,7 +801,6 @@
         document.getElementById('footerEmail').textContent = CONFIG.tuEmail;
         document.getElementById('totalReservas').textContent = reservas.length;
 
-        // Cargar datos guardados
         const datosGuardados = localStorage.getItem('datosAlquiler');
         if (datosGuardados) {
             const datos = JSON.parse(datosGuardados);
@@ -770,6 +814,46 @@
                 preciosPersonalizados
             }));
         }
+
+        // VALIDACIÓN DNI
+        function validarDNI(dni) {
+            const dniRegex = /^[0-9]{8}[A-Z]$/i;
+            if (!dniRegex.test(dni)) return false;
+            
+            const letras = 'TRWAGMYFPDXBNJZSQVHLCKE';
+            const numero = dni.substr(0, 8);
+            const letra = dni.substr(8, 1).toUpperCase();
+            
+            return letras.charAt(numero % 23) === letra;
+        }
+
+        document.getElementById('dni').addEventListener('input', function(e) {
+            const dni = e.target.value.toUpperCase();
+            const validation = document.getElementById('dniValidation');
+            
+            if (dni.length === 0) {
+                e.target.className = '';
+                validation.textContent = '';
+                validation.className = 'validation-message';
+                return;
+            }
+            
+            if (dni.length === 9) {
+                if (validarDNI(dni)) {
+                    e.target.className = 'valid';
+                    validation.textContent = '✓ DNI válido';
+                    validation.className = 'validation-message success';
+                } else {
+                    e.target.className = 'invalid';
+                    validation.textContent = '✗ DNI no válido';
+                    validation.className = 'validation-message error';
+                }
+            } else {
+                e.target.className = 'invalid';
+                validation.textContent = 'Debe tener 8 números y 1 letra';
+                validation.className = 'validation-message error';
+            }
+        });
 
         function generarCalendario() {
             const año = mesActual.getFullYear();
@@ -829,12 +913,20 @@
                     diaDiv.innerHTML += '<div style="font-size: 0.7rem;">🟢</div>';
                 }
                 
-                if (fechasSeleccionadas.includes(fechaStr)) {
-                    diaDiv.classList.add('selected');
+                if (rangoInicio && rangoInicio === fechaStr) {
+                    diaDiv.classList.add('range-start');
                 }
                 
                 if (modoAdmin && fecha >= hoy) {
-                    diaDiv.onclick = () => toggleSeleccion(fechaStr);
+                    diaDiv.onclick = (e) => clickAdminFecha(fechaStr, e);
+                    diaDiv.oncontextmenu = (e) => mostrarContextMenu(e, fechaStr);
+                    diaDiv.onmouseenter = () => {
+                        if (rangoSeleccionando && rangoInicio) {
+                            marcarRangoHover(rangoInicio, fechaStr);
+                        }
+                    };
+                } else if (fecha >= hoy && !esBloqueado) {
+                    diaDiv.onclick = () => seleccionarFechaCliente(fechaStr);
                 }
                 
                 calendario.appendChild(diaDiv);
@@ -844,6 +936,142 @@
         function cambiarMes(dir) {
             mesActual.setMonth(mesActual.getMonth() + dir);
             generarCalendario();
+        }
+
+        // SELECCIÓN DE FECHAS PARA CLIENTES
+        function seleccionarFechaCliente(fecha) {
+            const entrada = document.getElementById('fechaEntrada');
+            const salida = document.getElementById('fechaSalida');
+            
+            if (!entrada.value || (entrada.value && salida.value)) {
+                entrada.value = fecha;
+                salida.value = '';
+            } else if (entrada.value && !salida.value) {
+                if (new Date(fecha) > new Date(entrada.value)) {
+                    salida.value = fecha;
+                    calcularResumen();
+                } else {
+                    salida.value = entrada.value;
+                    entrada.value = fecha;
+                    calcularResumen();
+                }
+            }
+        }
+
+        // ADMIN - SELECCIÓN DE RANGO CON 2 CLICS
+        function clickAdminFecha(fecha, e) {
+            e.preventDefault();
+            
+            if (!rangoSeleccionando) {
+                rangoInicio = fecha;
+                rangoSeleccionando = true;
+                generarCalendario();
+                mostrarAlerta('✅ Fecha inicial seleccionada. Haz clic en otra fecha para completar el rango', 'success');
+            } else {
+                const fechaFin = fecha;
+                const fechas = obtenerFechasEntre(rangoInicio, fechaFin);
+                
+                mostrarAlerta(`✅ Rango seleccionado: ${fechas.length} fechas. Haz clic derecho en cualquiera para gestionar.`, 'success');
+                
+                rangoInicio = null;
+                rangoSeleccionando = false;
+                generarCalendario();
+            }
+        }
+
+        function obtenerFechasEntre(inicio, fin) {
+            const fechas = [];
+            const fechaInicio = new Date(inicio);
+            const fechaFin = new Date(fin);
+            
+            if (fechaInicio > fechaFin) {
+                [fechaInicio, fechaFin] = [fechaFin, fechaInicio];
+            }
+            
+            for (let d = new Date(fechaInicio); d <= fechaFin; d.setDate(d.getDate() + 1)) {
+                fechas.push(d.toISOString().split('T')[0]);
+            }
+            
+            return fechas;
+        }
+
+        function marcarRangoHover(inicio, fin) {
+            const fechas = obtenerFechasEntre(inicio, fin);
+            document.querySelectorAll('.calendar-day').forEach(dia => {
+                dia.classList.remove('range-hover');
+                if (fechas.includes(dia.dataset.fecha)) {
+                    dia.classList.add('range-hover');
+                }
+            });
+        }
+
+        // MENÚ CONTEXTUAL (CLICK DERECHO)
+        function mostrarContextMenu(e, fecha) {
+            e.preventDefault();
+            fechaContextMenu = fecha;
+            
+            const menu = document.getElementById('contextMenu');
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+            menu.classList.add('show');
+        }
+
+        document.addEventListener('click', () => {
+            document.getElementById('contextMenu').classList.remove('show');
+        });
+
+        function bloquearFechaContexto() {
+            if (!fechaContextMenu) return;
+            
+            if (!fechasBloqueadas.includes(fechaContextMenu)) {
+                fechasBloqueadas.push(fechaContextMenu);
+                guardarDatos();
+                generarCalendario();
+                mostrarAlerta('✅ Fecha bloqueada correctamente', 'success');
+            } else {
+                mostrarAlerta('⚠️ La fecha ya está bloqueada', 'error');
+            }
+        }
+
+        function desbloquearFechaContexto() {
+            if (!fechaContextMenu) return;
+            
+            const index = fechasBloqueadas.indexOf(fechaContextMenu);
+            if (index > -1) {
+                fechasBloqueadas.splice(index, 1);
+                guardarDatos();
+                generarCalendario();
+                mostrarAlerta('✅ Fecha desbloqueada correctamente', 'success');
+            } else {
+                mostrarAlerta('⚠️ La fecha no estaba bloqueada', 'error');
+            }
+        }
+
+        function asignarPrecioContexto() {
+            if (!fechaContextMenu) return;
+            
+            const fecha = new Date(fechaContextMenu + 'T00:00:00');
+            const fechaFormateada = fecha.toLocaleDateString('es-ES');
+            
+            document.getElementById('fechasParaPrecio').innerHTML = 
+                `<p style="margin-bottom: 1rem;"><strong>Asignar precio a:</strong><br>${fechaFormateada}</p>`;
+            
+            document.getElementById('modalPrecio').classList.add('show');
+        }
+
+        function guardarPrecio() {
+            const precio = document.getElementById('nuevoPrecio').value;
+            if (!precio || precio <= 0) {
+                mostrarAlerta('❌ Introduce un precio válido', 'error');
+                return;
+            }
+            
+            preciosPersonalizados[fechaContextMenu] = parseFloat(precio);
+            guardarDatos();
+            cerrarModal('modalPrecio');
+            document.getElementById('nuevoPrecio').value = '';
+            generarCalendario();
+            mostrarAlerta(`✅ Precio de ${precio}€ aplicado correctamente`, 'success');
         }
 
         function mostrarLoginAdmin() {
@@ -857,7 +1085,7 @@
                 document.getElementById('adminPanel').classList.add('show');
                 cerrarModal('modalLoginAdmin');
                 generarCalendario();
-                mostrarAlerta('✅ Modo administrador activado', 'success');
+                mostrarAlerta('✅ Modo administrador activado. Clic derecho en fechas para gestionar, 2 clics para rangos', 'success');
             } else {
                 mostrarAlerta('❌ Contraseña incorrecta', 'error');
             }
@@ -865,98 +1093,11 @@
 
         function cerrarAdmin() {
             modoAdmin = false;
-            fechasSeleccionadas = [];
+            rangoInicio = null;
+            rangoSeleccionando = false;
             document.getElementById('adminPanel').classList.remove('show');
-            document.getElementById('selectionInfo').style.display = 'none';
             generarCalendario();
             mostrarAlerta('👁️ Modo cliente activado', 'success');
-        }
-
-        function toggleSeleccion(fecha) {
-            const index = fechasSeleccionadas.indexOf(fecha);
-            if (index > -1) {
-                fechasSeleccionadas.splice(index, 1);
-            } else {
-                fechasSeleccionadas.push(fecha);
-            }
-            generarCalendario();
-            actualizarInfoSeleccion();
-        }
-
-        function actualizarInfoSeleccion() {
-            const info = document.getElementById('selectionInfo');
-            if (fechasSeleccionadas.length > 0) {
-                info.style.display = 'block';
-                document.getElementById('selectionCount').textContent = fechasSeleccionadas.length;
-                const fechasOrdenadas = [...fechasSeleccionadas].sort();
-                document.getElementById('selectionList').innerHTML = fechasOrdenadas.map(f => {
-                    const fecha = new Date(f + 'T00:00:00');
-                    return fecha.toLocaleDateString('es-ES');
-                }).join(', ');
-            } else {
-                info.style.display = 'none';
-            }
-        }
-
-        function limpiarSeleccion() {
-            fechasSeleccionadas = [];
-            document.getElementById('selectionInfo').style.display = 'none';
-            generarCalendario();
-        }
-
-        function bloquearSeleccionadas() {
-            if (fechasSeleccionadas.length === 0) {
-                mostrarAlerta('❌ Selecciona fechas en el calendario', 'error');
-                return;
-            }
-            
-            fechasSeleccionadas.forEach(fecha => {
-                if (!fechasBloqueadas.includes(fecha)) {
-                    fechasBloqueadas.push(fecha);
-                }
-            });
-            
-            guardarDatos();
-            limpiarSeleccion();
-            generarCalendario();
-            mostrarAlerta('✅ Fechas bloqueadas correctamente', 'success');
-        }
-
-        function asignarPrecioSeleccionadas() {
-            if (fechasSeleccionadas.length === 0) {
-                mostrarAlerta('❌ Selecciona fechas en el calendario', 'error');
-                return;
-            }
-            
-            const fechasOrdenadas = [...fechasSeleccionadas].sort();
-            const lista = fechasOrdenadas.map(f => {
-                const fecha = new Date(f + 'T00:00:00');
-                return fecha.toLocaleDateString('es-ES');
-            }).join(', ');
-            
-            document.getElementById('fechasParaPrecio').innerHTML = 
-                `<p style="margin-bottom: 1rem;"><strong>Asignar precio a:</strong><br>${lista}</p>`;
-            
-            document.getElementById('modalPrecio').classList.add('show');
-        }
-
-        function guardarPrecio() {
-            const precio = document.getElementById('nuevoPrecio').value;
-            if (!precio || precio <= 0) {
-                mostrarAlerta('❌ Introduce un precio válido', 'error');
-                return;
-            }
-            
-            fechasSeleccionadas.forEach(fecha => {
-                preciosPersonalizados[fecha] = parseFloat(precio);
-            });
-            
-            guardarDatos();
-            cerrarModal('modalPrecio');
-            document.getElementById('nuevoPrecio').value = '';
-            limpiarSeleccion();
-            generarCalendario();
-            mostrarAlerta(`✅ Precio de ${precio}€ aplicado correctamente`, 'success');
         }
 
         function mostrarReservas() {
@@ -1021,14 +1162,13 @@
                     mostrarAlerta('El archivo es demasiado grande. Máximo 5MB', 'error');
                     input.value = '';
                     fileName.textContent = '';
+                    archivoJustificante = null;
                     return;
                 }
                 fileName.textContent = `✅ ${file.name}`;
+                archivoJustificante = file;
             }
         }
-
-        document.getElementById('fechaEntrada').addEventListener('change', calcularResumen);
-        document.getElementById('fechaSalida').addEventListener('change', calcularResumen);
 
         function calcularResumen() {
             const entrada = document.getElementById('fechaEntrada').value;
@@ -1068,8 +1208,14 @@
         document.getElementById('reservaForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const archivo = document.getElementById('justificante').files[0];
-            if (!archivo) {
+            const dniInput = document.getElementById('dni');
+            if (!validarDNI(dniInput.value)) {
+                mostrarAlerta('❌ El DNI no es válido. Por favor, corrígelo.', 'error');
+                dniInput.focus();
+                return;
+            }
+            
+            if (!archivoJustificante) {
                 mostrarAlerta('❌ Debes adjuntar el justificante de pago', 'error');
                 return;
             }
@@ -1077,7 +1223,7 @@
             const reserva = {
                 fechaReserva: new Date().toLocaleString('es-ES'),
                 nombre: document.getElementById('nombre').value,
-                dni: document.getElementById('dni').value,
+                dni: dniInput.value.toUpperCase(),
                 email: document.getElementById('email').value,
                 telefono: document.getElementById('telefono').value,
                 personas: document.getElementById('personas').value,
@@ -1087,7 +1233,7 @@
                 total: document.getElementById('resumenTotal').textContent,
                 señal: document.getElementById('resumenSeñal').textContent,
                 comentarios: document.getElementById('comentarios').value,
-                archivoNombre: archivo.name
+                archivoNombre: archivoJustificante.name
             };
             
             reservas.push(reserva);
@@ -1106,52 +1252,94 @@
             guardarDatos();
             generarCalendario();
             
-            // Crear archivo con los datos
-            const textoReserva = `
-RESERVA RECIBIDA - ${CONFIG.nombreCampo}
-========================================
+            // Preparar email para el cliente (bonito)
+            const emailCliente = `
+Estimado/a ${reserva.nombre},
 
-Fecha de reserva: ${reserva.fechaReserva}
+¡Gracias por tu reserva en ${CONFIG.nombreCampo}!
 
-DATOS DEL CLIENTE:
-------------------
+📋 DETALLES DE TU RESERVA:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 Entrada: ${new Date(reserva.fechaEntrada).toLocaleDateString('es-ES', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'})}
+📅 Salida: ${new Date(reserva.fechaSalida).toLocaleDateString('es-ES', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'})}
+🌙 Noches: ${reserva.noches}
+👥 Personas: ${reserva.personas}
+
+💰 INFORMACIÓN DE PAGO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total estancia: ${reserva.total}€
+Señal pagada (${CONFIG.señalPorcentaje}%): ${reserva.señal}€
+Pendiente de pago: ${(parseFloat(reserva.total) - parseFloat(reserva.señal)).toFixed(2)}€
+
+${reserva.comentarios ? '💬 Comentarios: ' + reserva.comentarios : ''}
+
+Te confirmaremos tu reserva en breve tras revisar el justificante de pago.
+
+¡Esperamos verte pronto!
+
+Saludos,
+${CONFIG.nombreCampo}
+${CONFIG.tuEmail}
+            `.trim();
+
+            // Preparar email para el propietario
+            const emailPropietario = `
+NUEVA RESERVA RECIBIDA - ${CONFIG.nombreCampo}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 DATOS DEL CLIENTE:
 Nombre: ${reserva.nombre}
 DNI: ${reserva.dni}
 Email: ${reserva.email}
 Teléfono: ${reserva.telefono}
 
-DATOS DE LA ESTANCIA:
----------------------
-Personas: ${reserva.personas}
-Fecha entrada: ${reserva.fechaEntrada}
-Fecha salida: ${reserva.fechaSalida}
+📅 DATOS DE LA ESTANCIA:
+Entrada: ${reserva.fechaEntrada}
+Salida: ${reserva.fechaSalida}
 Noches: ${reserva.noches}
+Personas: ${reserva.personas}
 
-DATOS DE PAGO:
---------------
+💰 DATOS DE PAGO:
 Total: ${reserva.total}€
-Señal pagada: ${reserva.señal}€
+Señal recibida: ${reserva.señal}€
+Pendiente: ${(parseFloat(reserva.total) - parseFloat(reserva.señal)).toFixed(2)}€
 
-Comentarios: ${reserva.comentarios || 'Ninguno'}
+${reserva.comentarios ? '💬 Comentarios del cliente:\n' + reserva.comentarios : ''}
 
-Justificante adjunto: ${reserva.archivoNombre}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-========================================
-Por favor, revisa el justificante adjunto y confirma la reserva.
+⚠️ IMPORTANTE: El justificante de pago debe adjuntarse manualmente al email.
+
+Fecha de reserva: ${reserva.fechaReserva}
             `.trim();
+
+            // Crear enlaces mailto
+            const mailtoCliente = `mailto:${reserva.email}?subject=${encodeURIComponent('Confirmación de Reserva - ' + CONFIG.nombreCampo)}&body=${encodeURIComponent(emailCliente)}`;
             
-            const blob = new Blob([textoReserva], { type: 'text/plain' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `Reserva_${reserva.nombre.replace(/\s+/g, '_')}_${new Date().getTime()}.txt`;
-            link.click();
+            const mailtoPropietario = `mailto:${CONFIG.tuEmail}?subject=${encodeURIComponent('Nueva Reserva - ' + reserva.nombre)}&body=${encodeURIComponent(emailPropietario + '\n\n[ADJUNTAR JUSTIFICANTE MANUALMENTE]')}`;
+
+            // Abrir emails automáticamente
+            window.open(mailtoCliente, '_blank');
+            setTimeout(() => {
+                window.open(mailtoPropietario, '_blank');
+            }, 1000);
+
+            mostrarAlerta(`✅ ¡Reserva guardada! Se han abierto 2 ventanas de email:
             
-            mostrarAlerta(`✅ ¡Reserva guardada! Se ha descargado un archivo con los datos. 
-                          Por favor, envía este archivo junto con el justificante a: ${CONFIG.tuEmail}`, 'success');
+1️⃣ Email de confirmación para el cliente
+2️⃣ Email para ti con los datos de la reserva
+
+⚠️ IMPORTANTE: Debes adjuntar manualmente el justificante "${archivoJustificante.name}" al email que te envías a ti mismo.
+
+Las fechas ya están bloqueadas en el calendario.`, 'success');
             
             document.getElementById('reservaForm').reset();
             document.getElementById('resumenReserva').style.display = 'none';
             document.getElementById('fileName').textContent = '';
+            document.getElementById('dniValidation').textContent = '';
+            document.getElementById('dniValidation').className = 'validation-message';
+            archivoJustificante = null;
         });
 
         function mostrarAlerta(mensaje, tipo) {
@@ -1160,7 +1348,7 @@ Por favor, revisa el justificante adjunto y confirma la reserva.
             window.scrollTo({ top: 0, behavior: 'smooth' });
             setTimeout(() => {
                 container.innerHTML = '';
-            }, 8000);
+            }, 10000);
         }
 
         const hoy = new Date().toISOString().split('T')[0];
