@@ -639,7 +639,7 @@
         <section class="section">
             <h2>📅 Disponibilidad</h2>
             <p style="text-align: center; color: var(--color-secundario); margin-bottom: 0.8rem; font-size: 0.85rem;">
-                Toca entrada y salida
+                Toca entrada y salida | <span style="color: #dc3545; cursor: pointer; font-weight: bold;" onclick="limpiarFechas()">✖️ Limpiar fechas</span>
             </p>
             <div class="month-selector">
                 <button onclick="cambiarMes(-1)">◀</button>
@@ -1005,28 +1005,53 @@
             const entrada = document.getElementById('fechaEntrada');
             const salida = document.getElementById('fechaSalida');
             
+            // Si toca la misma fecha que ya está seleccionada como entrada, limpiar todo
+            if (fechaEntradaSeleccionada === fecha && !salida.value) {
+                limpiarFechas();
+                mostrarAlerta('✓ Fechas limpiadas', 'success');
+                return;
+            }
+            
+            // Si toca una fecha del rango ya seleccionado, limpiar
+            if (entrada.value && salida.value) {
+                if (fecha >= entrada.value && fecha <= salida.value) {
+                    limpiarFechas();
+                    mostrarAlerta('✓ Fechas limpiadas. Selecciona de nuevo', 'success');
+                    return;
+                }
+            }
+            
             if (!fechaEntradaSeleccionada) {
+                // Primera selección - entrada
                 fechaEntradaSeleccionada = fecha;
                 entrada.value = fecha;
                 salida.value = '';
                 generarCalendario();
-                mostrarAlerta('✓ Entrada seleccionada. Ahora toca la salida', 'success');
+                mostrarAlerta('✓ Entrada: ' + new Date(fecha + 'T12:00:00').toLocaleDateString('es-ES') + '. Selecciona salida', 'success');
             } else {
-                const fechaEnt = new Date(fechaEntradaSeleccionada + 'T12:00:00');
-                const fechaSal = new Date(fecha + 'T12:00:00');
-                
-                if (fechaSal > fechaEnt) {
+                // Segunda selección - salida
+                if (fecha > fechaEntradaSeleccionada) {
                     salida.value = fecha;
                     calcularResumen();
                     generarCalendario();
+                    mostrarAlerta('✓ Fechas seleccionadas. Toca cualquier día amarillo para limpiar', 'success');
                 } else {
+                    // Si selecciona una fecha anterior, reinicia
                     entrada.value = fecha;
                     salida.value = '';
                     fechaEntradaSeleccionada = fecha;
                     generarCalendario();
-                    mostrarAlerta('✓ Nueva entrada. Toca la salida', 'success');
+                    mostrarAlerta('✓ Nueva entrada. Selecciona salida', 'success');
                 }
             }
+        }
+
+        function limpiarFechas() {
+            document.getElementById('fechaEntrada').value = '';
+            document.getElementById('fechaSalida').value = '';
+            document.getElementById('resumenReserva').style.display = 'none';
+            fechaEntradaSeleccionada = null;
+            generarCalendario();
         }
 
         function mostrarActionMenu(fecha) {
@@ -1246,9 +1271,10 @@
             const salida = document.getElementById('fechaSalida').value;
             
             if (entrada && salida) {
-                const fechaEntrada = new Date(entrada);
-                const fechaSalida = new Date(salida);
-                const noches = Math.ceil((fechaSalida - fechaEntrada) / (1000 * 60 * 60 * 24));
+                // Calcular días entre fechas usando solo las cadenas de texto
+                const fechaEntrada = new Date(entrada + 'T12:00:00');
+                const fechaSalida = new Date(salida + 'T12:00:00');
+                const noches = Math.round((fechaSalida - fechaEntrada) / (1000 * 60 * 60 * 24));
                 
                 if (noches < CONFIG.estanciaMinima) {
                     mostrarAlerta(`Mínimo ${CONFIG.estanciaMinima} noches`, 'error');
@@ -1258,8 +1284,9 @@
                 
                 if (noches > 0) {
                     let total = 0;
+                    // Iterar por las fechas correctamente
                     for (let i = 0; i < noches; i++) {
-                        const fecha = new Date(fechaEntrada);
+                        const fecha = new Date(entrada + 'T12:00:00');
                         fecha.setDate(fecha.getDate() + i);
                         const fechaStr = fecha.toISOString().split('T')[0];
                         const precio = preciosPersonalizados[fechaStr] || CONFIG.precioPorNoche;
