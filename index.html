@@ -1313,12 +1313,6 @@
                 return;
             }
             
-            const archivo = document.getElementById('justificante').files[0];
-            if (!archivo) {
-                mostrarAlerta('Falta justificante', 'error');
-                return;
-            }
-            
             const btnEnviar = document.getElementById('btnEnviar');
             const loader = document.getElementById('loader');
             
@@ -1340,7 +1334,6 @@
                     señal: document.getElementById('resumenSeñal').textContent,
                     comentarios: document.getElementById('comentarios').value,
                     nombreCampo: CONFIG.nombreCampo,
-                    archivoNombre: archivo.name,
                     confirmada: false
                 };
                 
