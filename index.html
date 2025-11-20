@@ -129,7 +129,7 @@
         .calendar {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
+            gap: 3px;
             margin-top: 1rem;
             min-width: 100%;
         }
@@ -137,11 +137,11 @@
         .calendar-header {
             background: var(--color-principal);
             color: var(--color-blanco);
-            padding: 0.5rem 0.2rem;
+            padding: 0.4rem 0.1rem;
             text-align: center;
             font-weight: bold;
-            border-radius: 4px;
-            font-size: 0.75rem;
+            border-radius: 3px;
+            font-size: 0.7rem;
         }
 
         .calendar-day {
@@ -150,15 +150,16 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border: 2px solid #ddd;
-            border-radius: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s;
-            padding: 0.2rem;
-            font-size: 0.8rem;
+            padding: 0.15rem;
+            font-size: 0.7rem;
             position: relative;
             user-select: none;
             touch-action: manipulation;
+            min-height: 45px;
         }
 
         .calendar-day:active {
@@ -186,14 +187,14 @@
         .calendar-day.selected {
             background: #fff3cd !important;
             border-color: #ffc107 !important;
-            border-width: 3px !important;
+            border-width: 2px !important;
         }
 
         .precio-dia {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             color: var(--color-secundario);
             font-weight: bold;
-            margin-top: 2px;
+            margin-top: 1px;
         }
 
         .month-selector {
@@ -832,7 +833,7 @@
                 
                 if (dataFechas.success) {
                     fechasBloqueadas = dataFechas.fechas || [];
-                    console.log('✅ Fechas cargadas:', fechasBloqueadas.length);
+                    console.log('✅ Fechas bloqueadas cargadas:', fechasBloqueadas.length);
                 }
 
                 const resPrecios = await fetch(GOOGLE_SCRIPT_URL + '?accion=obtenerPrecios');
@@ -843,9 +844,7 @@
                     console.log('✅ Precios cargados:', Object.keys(preciosPersonalizados).length);
                 }
 
-                if (modoAdmin) {
-                    await cargarReservasGoogle();
-                }
+                await cargarReservasGoogle();
 
                 generarCalendario();
                 
@@ -969,7 +968,7 @@
                 
                 if (exito) {
                     fechasBloqueadas.push(fechaSeleccionadaAdmin);
-                    generarCalendario();
+                    await cargarDatosGoogle();
                     cerrarActionMenu();
                     mostrarAlerta('✓ Fecha bloqueada', 'success');
                 } else {
@@ -988,7 +987,7 @@
                 
                 if (exito) {
                     fechasBloqueadas.splice(index, 1);
-                    generarCalendario();
+                    await cargarDatosGoogle();
                     cerrarActionMenu();
                     mostrarAlerta('✓ Fecha desbloqueada', 'success');
                 } else {
@@ -1013,7 +1012,7 @@
                 preciosPersonalizados[fechaSeleccionadaAdmin] = parseFloat(precio);
                 cerrarModal('modalPrecio');
                 document.getElementById('nuevoPrecio').value = '';
-                generarCalendario();
+                await cargarDatosGoogle();
                 mostrarAlerta('✓ Precio: ' + precio + '€', 'success');
             } else {
                 mostrarAlerta('❌ Error al guardar precio', 'error');
@@ -1041,15 +1040,22 @@
                 }
             }
             
+            if (fechasABloquear.length === 0) {
+                mostrarAlerta('⚠️ Fechas ya bloqueadas', 'error');
+                return;
+            }
+            
             const exito = await bloquearRangoGoogle(fechasABloquear);
             
             if (exito) {
                 fechasBloqueadas.push(...fechasABloquear);
                 reservas[index].confirmada = true;
                 localStorage.setItem('reservas', JSON.stringify(reservas));
-                generarCalendario();
+                
+                await cargarDatosGoogle();
+                
                 mostrarReservas();
-                mostrarAlerta('✓ Confirmada y bloqueada', 'success');
+                mostrarAlerta('✓ Confirmada y bloqueada (' + fechasABloquear.length + ' días)', 'success');
             } else {
                 mostrarAlerta('❌ Error al confirmar', 'error');
             }
@@ -1066,6 +1072,7 @@
                 const fechaInicio = new Date(yearIni, mesIni - 1, diaIni);
                 const fechaFin = new Date(yearFin, mesFin - 1, diaFin);
                 
+                const promesas = [];
                 for (let d = new Date(fechaInicio); d < fechaFin; d.setDate(d.getDate() + 1)) {
                     const year = d.getFullYear();
                     const mes = String(d.getMonth() + 1).padStart(2, '0');
@@ -1074,10 +1081,13 @@
                     const idx = fechasBloqueadas.indexOf(fechaStr);
                     if (idx > -1) {
                         fechasBloqueadas.splice(idx, 1);
-                        eliminarFechaBloqueada(fechaStr);
+                        promesas.push(eliminarFechaBloqueada(fechaStr));
                     }
                 }
-                generarCalendario();
+                
+                Promise.all(promesas).then(() => {
+                    cargarDatosGoogle();
+                });
             }
             
             reservas.splice(index, 1);
@@ -1185,10 +1195,8 @@
                     diaDiv.classList.add('past');
                 } else if (esBloqueado) {
                     diaDiv.classList.add('blocked');
-                    diaDiv.innerHTML += '<div style="font-size: 0.65rem;">🔴</div>';
                 } else {
                     diaDiv.classList.add('available');
-                    diaDiv.innerHTML += '<div style="font-size: 0.65rem;">🟢</div>';
                 }
                 
                 const entradaSel = document.getElementById('fechaEntrada').value;
