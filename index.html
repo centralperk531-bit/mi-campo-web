@@ -871,8 +871,12 @@
 
         async function guardarFechaBloqueada(fecha) {
             try {
+                console.log('🔒 Bloqueando fecha:', fecha);
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
                     body: JSON.stringify({
                         accion: 'bloquearFecha',
                         fecha: fecha
@@ -880,17 +884,22 @@
                 });
                 
                 const data = await response.json();
+                console.log('📥 Respuesta bloquear:', data);
                 return data.success;
             } catch (error) {
-                console.error('❌ Error:', error);
+                console.error('❌ Error bloquear:', error);
                 return false;
             }
         }
 
         async function eliminarFechaBloqueada(fecha) {
             try {
+                console.log('🔓 Desbloqueando fecha:', fecha);
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
                     body: JSON.stringify({
                         accion: 'desbloquearFecha',
                         fecha: fecha
@@ -898,17 +907,22 @@
                 });
                 
                 const data = await response.json();
+                console.log('📥 Respuesta desbloquear:', data);
                 return data.success;
             } catch (error) {
-                console.error('❌ Error:', error);
+                console.error('❌ Error desbloquear:', error);
                 return false;
             }
         }
 
         async function guardarPrecioGoogle(fecha, precio) {
             try {
+                console.log('💰 Guardando precio:', fecha, precio);
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
                     body: JSON.stringify({
                         accion: 'guardarPrecio',
                         fecha: fecha,
@@ -917,17 +931,22 @@
                 });
                 
                 const data = await response.json();
+                console.log('📥 Respuesta precio:', data);
                 return data.success;
             } catch (error) {
-                console.error('❌ Error:', error);
+                console.error('❌ Error precio:', error);
                 return false;
             }
         }
 
         async function guardarReservaGoogle(reserva) {
             try {
+                console.log('📝 Guardando reserva:', reserva);
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
                     body: JSON.stringify({
                         accion: 'guardarReserva',
                         ...reserva
@@ -935,17 +954,22 @@
                 });
                 
                 const data = await response.json();
+                console.log('📥 Respuesta reserva:', data);
                 return data.success;
             } catch (error) {
-                console.error('❌ Error:', error);
+                console.error('❌ Error reserva:', error);
                 return false;
             }
         }
 
         async function bloquearRangoGoogle(fechas) {
             try {
+                console.log('🔒 Bloqueando rango de', fechas.length, 'fechas:', fechas);
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
                     body: JSON.stringify({
                         accion: 'bloquearRango',
                         fechas: fechas
@@ -953,9 +977,10 @@
                 });
                 
                 const data = await response.json();
+                console.log('📥 Respuesta bloquear rango:', data);
                 return data.success;
             } catch (error) {
-                console.error('❌ Error:', error);
+                console.error('❌ Error bloquear rango:', error);
                 return false;
             }
         }
@@ -963,6 +988,8 @@
         // ===== FUNCIONES DE ADMIN =====
 
         async function bloquearFecha() {
+            mostrarAlerta('⏳ Bloqueando...', 'success');
+            
             if (!fechasBloqueadas.includes(fechaSeleccionadaAdmin)) {
                 const exito = await guardarFechaBloqueada(fechaSeleccionadaAdmin);
                 
@@ -970,17 +997,21 @@
                     fechasBloqueadas.push(fechaSeleccionadaAdmin);
                     await cargarDatosGoogle();
                     cerrarActionMenu();
-                    mostrarAlerta('✓ Fecha bloqueada', 'success');
+                    mostrarAlerta('✓ Fecha bloqueada: ' + fechaSeleccionadaAdmin, 'success');
                 } else {
-                    mostrarAlerta('❌ Error al bloquear', 'error');
+                    cerrarActionMenu();
+                    mostrarAlerta('❌ Error al bloquear. Revisa la consola (F12)', 'error');
                 }
             } else {
+                cerrarActionMenu();
                 mostrarAlerta('Ya está bloqueada', 'error');
             }
         }
 
         async function desbloquearFecha() {
             const index = fechasBloqueadas.indexOf(fechaSeleccionadaAdmin);
+            
+            mostrarAlerta('⏳ Desbloqueando...', 'success');
             
             if (index > -1) {
                 const exito = await eliminarFechaBloqueada(fechaSeleccionadaAdmin);
@@ -989,11 +1020,13 @@
                     fechasBloqueadas.splice(index, 1);
                     await cargarDatosGoogle();
                     cerrarActionMenu();
-                    mostrarAlerta('✓ Fecha desbloqueada', 'success');
+                    mostrarAlerta('✓ Fecha desbloqueada: ' + fechaSeleccionadaAdmin, 'success');
                 } else {
-                    mostrarAlerta('❌ Error al desbloquear', 'error');
+                    cerrarActionMenu();
+                    mostrarAlerta('❌ Error al desbloquear. Revisa la consola (F12)', 'error');
                 }
             } else {
+                cerrarActionMenu();
                 mostrarAlerta('No está bloqueada', 'error');
             }
         }
@@ -1022,6 +1055,8 @@
         async function confirmarReserva(index) {
             if (!confirm('¿Confirmar reserva? Se bloquearán las fechas.')) return;
             
+            mostrarAlerta('⏳ Confirmando y bloqueando...', 'success');
+            
             const r = reservas[index];
             
             const fechasABloquear = [];
@@ -1029,6 +1064,8 @@
             const [yearFin, mesFin, diaFin] = r.fechaSalida.split('-').map(Number);
             const fechaInicio = new Date(yearIni, mesIni - 1, diaIni);
             const fechaFin = new Date(yearFin, mesFin - 1, diaFin);
+            
+            console.log('📅 Bloqueando desde', r.fechaEntrada, 'hasta', r.fechaSalida);
             
             for (let d = new Date(fechaInicio); d < fechaFin; d.setDate(d.getDate() + 1)) {
                 const year = d.getFullYear();
@@ -1039,6 +1076,8 @@
                     fechasABloquear.push(fechaStr);
                 }
             }
+            
+            console.log('📋 Fechas a bloquear:', fechasABloquear);
             
             if (fechasABloquear.length === 0) {
                 mostrarAlerta('⚠️ Fechas ya bloqueadas', 'error');
@@ -1055,9 +1094,9 @@
                 await cargarDatosGoogle();
                 
                 mostrarReservas();
-                mostrarAlerta('✓ Confirmada y bloqueada (' + fechasABloquear.length + ' días)', 'success');
+                mostrarAlerta('✓ Confirmada! Bloqueadas ' + fechasABloquear.length + ' noches', 'success');
             } else {
-                mostrarAlerta('❌ Error al confirmar', 'error');
+                mostrarAlerta('❌ Error al confirmar. Revisa la consola (F12)', 'error');
             }
         }
 
@@ -1400,6 +1439,9 @@
                 listado.innerHTML = '<p style="text-align: center; color: #999;">Sin reservas</p>';
             } else {
                 listado.innerHTML = reservas.map(function(r, index) {
+                    const entrada = r.fechaEntrada ? r.fechaEntrada.split('T')[0] : '';
+                    const salida = r.fechaSalida ? r.fechaSalida.split('T')[0] : '';
+                    
                     return '<div class="reserva-item">' +
                         '<div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">' +
                         '<strong style="font-size: 1rem;">' + r.nombre + '</strong>' +
@@ -1407,10 +1449,10 @@
                         '</div>' +
                         r.dni + ' | 📧 ' + r.email + '<br>' +
                         '📞 ' + r.telefono + ' | 👥 ' + r.personas + '<br>' +
-                        '📅 ' + r.fechaEntrada + ' → ' + r.fechaSalida + '<br>' +
+                        '📅 ' + entrada + ' → ' + salida + '<br>' +
                         '💰 ' + r.total + '€ (Señal: ' + r.señal + '€)<br>' +
                         (r.comentarios ? '💬 ' + r.comentarios + '<br>' : '') +
-                        '<small>' + r.fechaReserva + '</small>' +
+                        '<small>' + (r.fechaReserva || '') + '</small>' +
                         '<div style="display: grid; grid-template-columns: ' + (!r.confirmada ? '1fr 1fr' : '1fr') + '; gap: 0.5rem; margin-top: 0.8rem;">' +
                         (!r.confirmada ? '<button class="btn btn-success" style="padding: 0.6rem; font-size: 0.85rem;" onclick="confirmarReserva(' + index + ')">✓ Confirmar</button>' : '') +
                         '<button class="btn btn-danger" style="padding: 0.6rem; font-size: 0.85rem;" onclick="eliminarReserva(' + index + ')">🗑️ Borrar</button>' +
