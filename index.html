@@ -1026,11 +1026,16 @@
             const r = reservas[index];
             
             const fechasABloquear = [];
-            const fechaInicio = new Date(r.fechaEntrada + 'T12:00:00');
-            const fechaFin = new Date(r.fechaSalida + 'T12:00:00');
+            const [yearIni, mesIni, diaIni] = r.fechaEntrada.split('-').map(Number);
+            const [yearFin, mesFin, diaFin] = r.fechaSalida.split('-').map(Number);
+            const fechaInicio = new Date(yearIni, mesIni - 1, diaIni);
+            const fechaFin = new Date(yearFin, mesFin - 1, diaFin);
             
             for (let d = new Date(fechaInicio); d < fechaFin; d.setDate(d.getDate() + 1)) {
-                const fechaStr = d.toISOString().split('T')[0];
+                const year = d.getFullYear();
+                const mes = String(d.getMonth() + 1).padStart(2, '0');
+                const dia = String(d.getDate()).padStart(2, '0');
+                const fechaStr = year + '-' + mes + '-' + dia;
                 if (!fechasBloqueadas.includes(fechaStr)) {
                     fechasABloquear.push(fechaStr);
                 }
@@ -1056,11 +1061,16 @@
             const r = reservas[index];
             
             if (r.confirmada) {
-                const fechaInicio = new Date(r.fechaEntrada + 'T12:00:00');
-                const fechaFin = new Date(r.fechaSalida + 'T12:00:00');
+                const [yearIni, mesIni, diaIni] = r.fechaEntrada.split('-').map(Number);
+                const [yearFin, mesFin, diaFin] = r.fechaSalida.split('-').map(Number);
+                const fechaInicio = new Date(yearIni, mesIni - 1, diaIni);
+                const fechaFin = new Date(yearFin, mesFin - 1, diaFin);
                 
                 for (let d = new Date(fechaInicio); d < fechaFin; d.setDate(d.getDate() + 1)) {
-                    const fechaStr = d.toISOString().split('T')[0];
+                    const year = d.getFullYear();
+                    const mes = String(d.getMonth() + 1).padStart(2, '0');
+                    const dia = String(d.getDate()).padStart(2, '0');
+                    const fechaStr = year + '-' + mes + '-' + dia;
                     const idx = fechasBloqueadas.indexOf(fechaStr);
                     if (idx > -1) {
                         fechasBloqueadas.splice(idx, 1);
@@ -1154,7 +1164,10 @@
             
             for (let dia = 1; dia <= diasMes; dia++) {
                 const fecha = new Date(año, mes, dia);
-                const fechaStr = fecha.toISOString().split('T')[0];
+                const year = fecha.getFullYear();
+                const mesStr = String(fecha.getMonth() + 1).padStart(2, '0');
+                const diaStr = String(fecha.getDate()).padStart(2, '0');
+                const fechaStr = year + '-' + mesStr + '-' + diaStr;
                 
                 const diaDiv = document.createElement('div');
                 diaDiv.className = 'calendar-day';
@@ -1281,8 +1294,10 @@
             const salida = document.getElementById('fechaSalida').value;
             
             if (entrada && salida) {
-                const fechaEntrada = new Date(entrada + 'T12:00:00');
-                const fechaSalida = new Date(salida + 'T12:00:00');
+                const [yearIni, mesIni, diaIni] = entrada.split('-').map(Number);
+                const [yearFin, mesFin, diaFin] = salida.split('-').map(Number);
+                const fechaEntrada = new Date(yearIni, mesIni - 1, diaIni);
+                const fechaSalida = new Date(yearFin, mesFin - 1, diaFin);
                 const noches = Math.round((fechaSalida - fechaEntrada) / (1000 * 60 * 60 * 24));
                 
                 if (noches < CONFIG.estanciaMinima) {
@@ -1294,9 +1309,12 @@
                 if (noches > 0) {
                     let total = 0;
                     for (let i = 0; i < noches; i++) {
-                        const fecha = new Date(entrada + 'T12:00:00');
+                        const fecha = new Date(yearIni, mesIni - 1, diaIni);
                         fecha.setDate(fecha.getDate() + i);
-                        const fechaStr = fecha.toISOString().split('T')[0];
+                        const year = fecha.getFullYear();
+                        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+                        const dia = String(fecha.getDate()).padStart(2, '0');
+                        const fechaStr = year + '-' + mes + '-' + dia;
                         const precio = preciosPersonalizados[fechaStr] || CONFIG.precioPorNoche;
                         total += parseFloat(precio);
                     }
@@ -1315,7 +1333,8 @@
 
         function mostrarActionMenu(fecha) {
             fechaSeleccionadaAdmin = fecha;
-            const fechaObj = new Date(fecha + 'T00:00:00');
+            const [year, mes, dia] = fecha.split('-').map(Number);
+            const fechaObj = new Date(year, mes - 1, dia);
             const fechaFormateada = fechaObj.toLocaleDateString('es-ES', {day: 'numeric', month: 'long'});
             document.getElementById('actionMenuTitle').textContent = fechaFormateada;
             document.getElementById('actionMenu').classList.add('show');
@@ -1331,7 +1350,8 @@
 
         function mostrarModalPrecio() {
             cerrarActionMenu();
-            const fecha = new Date(fechaSeleccionadaAdmin + 'T00:00:00');
+            const [year, mes, dia] = fechaSeleccionadaAdmin.split('-').map(Number);
+            const fecha = new Date(year, mes - 1, dia);
             const fechaFormateada = fecha.toLocaleDateString('es-ES');
             document.getElementById('fechasParaPrecio').innerHTML = 
                 '<p style="margin-bottom: 1rem;"><strong>Fecha:</strong> ' + fechaFormateada + '</p>';
