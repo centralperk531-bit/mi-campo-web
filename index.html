@@ -905,16 +905,24 @@
                 }
                 
                 if (dataReservas.success) {
-                    reservas = dataReservas.reservas || [];
-                    // Limpiar fechas con hora
-                    reservas.forEach(r => {
-                        if (r.fechaEntrada && r.fechaEntrada.includes('T')) {
-                            r.fechaEntrada = r.fechaEntrada.split('T')[0];
-                        }
-                        if (r.fechaSalida && r.fechaSalida.includes('T')) {
-                            r.fechaSalida = r.fechaSalida.split('T')[0];
-                        }
+                    const reservasGoogle = dataReservas.reservas || [];
+                    
+                    // Limpiar fechas con hora y reindexar
+                    reservas = reservasGoogle.map((r, index) => {
+                        let fechaEntrada = r.fechaEntrada || '';
+                        let fechaSalida = r.fechaSalida || '';
+                        
+                        if (fechaEntrada.includes('T')) fechaEntrada = fechaEntrada.split('T')[0];
+                        if (fechaSalida.includes('T')) fechaSalida = fechaSalida.split('T')[0];
+                        
+                        return {
+                            ...r,
+                            fechaEntrada,
+                            fechaSalida,
+                            indiceLocal: index // Índice del array local
+                        };
                     });
+                    
                     localStorage.setItem('reservas', JSON.stringify(reservas));
                     document.getElementById('totalReservas').textContent = reservas.length;
                     console.log('✅ Reservas cargadas:', reservas.length);
@@ -1547,19 +1555,27 @@
                     const salida = r.fechaSalida ? r.fechaSalida.split('T')[0] : '';
                     
                     return '<div class="reserva-item">' +
-                        '<div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">' +
+                        '<div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; align-items: center;">' +
                         '<strong style="font-size: 1rem;">' + r.nombre + '</strong>' +
-                        (r.confirmada ? '<span style="background: #28a745; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">✓ OK</span>' : '<span style="background: #ffc107; color: #333; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">⏳ Pend</span>') +
+                        (r.confirmada ? 
+                            '<span style="background: #28a745; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">✓ Confirmada</span>' : 
+                            '<span style="background: #ffc107; color: #333; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">⏳ Pendiente</span>') +
                         '</div>' +
-                        r.dni + ' | 📧 ' + r.email + '<br>' +
-                        '📞 ' + r.telefono + ' | 👥 ' + r.personas + '<br>' +
-                        '📅 ' + entrada + ' → ' + salida + '<br>' +
-                        '💰 ' + r.total + '€ (Señal: ' + r.señal + '€)<br>' +
+                        '<div style="font-size: 0.85rem; line-height: 1.6;">' +
+                        '📋 ' + r.dni + '<br>' +
+                        '📧 ' + r.email + '<br>' +
+                        '📞 ' + r.telefono + '<br>' +
+                        '👥 ' + r.personas + ' personas<br>' +
+                        '📅 <strong>' + entrada + ' → ' + salida + '</strong> (' + r.noches + ' noches)<br>' +
+                        '💰 Total: <strong>' + r.total + '€</strong> | Señal: <strong>' + r.señal + '€</strong><br>' +
                         (r.comentarios ? '💬 ' + r.comentarios + '<br>' : '') +
-                        '<small>' + (r.fechaReserva || '') + '</small>' +
+                        '<small style="color: #666;">' + (r.fechaReserva || '') + '</small>' +
+                        '</div>' +
                         '<div style="display: grid; grid-template-columns: ' + (!r.confirmada ? '1fr 1fr' : '1fr') + '; gap: 0.5rem; margin-top: 0.8rem;">' +
-                        (!r.confirmada ? '<button class="btn btn-success" style="padding: 0.6rem; font-size: 0.85rem;" onclick="confirmarReserva(' + index + ')">✓ Confirmar</button>' : '') +
-                        '<button class="btn btn-danger" style="padding: 0.6rem; font-size: 0.85rem;" onclick="eliminarReserva(' + index + ')">🗑️ Borrar</button>' +
+                        (!r.confirmada ? 
+                            '<button class="btn btn-success" style="padding: 0.7rem; font-size: 0.85rem;" onclick="confirmarReserva(' + index + ')">✓ Confirmar y Bloquear</button>' : 
+                            '') +
+                        '<button class="btn btn-danger" style="padding: 0.7rem; font-size: 0.85rem;" onclick="eliminarReserva(' + index + ')">🗑️ Eliminar</button>' +
                         '</div>' +
                         '</div>';
                 }).join('');
