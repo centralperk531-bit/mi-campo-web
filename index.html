@@ -350,6 +350,20 @@
                 position: sticky;
                 top: 1rem;
             }
+            
+            #seccionDisponibilidad {
+                display: none !important;
+            }
+        }
+        
+        @media (max-width: 767px) {
+            .reserva-calendario {
+                display: none;
+            }
+            
+            #seccionDisponibilidad {
+                display: block !important;
+            }
         }
 
         .btn {
@@ -650,7 +664,7 @@
             </div>
         </section>
 
-        <section class="section">
+        <section class="section" style="display: none;" id="seccionDisponibilidad">
             <h2>📅 Disponibilidad</h2>
             <p style="text-align: center; color: var(--color-secundario); margin-bottom: 0.6rem; font-size: 0.8rem;">
                 Toca entrada y salida | <span style="color: #dc3545; cursor: pointer; font-weight: bold;" onclick="limpiarFechas()">✖️ Limpiar</span>
@@ -866,7 +880,7 @@
         const ADMIN_PASSWORD = "micampo2025";
         
         // 🔥 CAMBIA ESTA URL POR LA TUYA
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxV8OM98FyzUCyUhn2OOrQXY1rjAFC4jWjjvkpcPXFA9x7a5-Z7P3DtG_NwNRtolAE/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwWRDsD3AQGmnLcYeEo_mRvp7hYg67X9dOnjC_FxOA6-IQXG7b_-2-6X76nyb94joT-/exec";
 
         const CONFIG = {
             nombreCampo: "El Campo",
@@ -1218,7 +1232,7 @@
         }
 
         async function eliminarReserva(index) {
-            if (!confirm('¿Eliminar esta reserva?')) return;
+            if (!confirm('¿Eliminar esta reserva?\n\nSe moverá a "Reservas Eliminadas" y podrás recuperarla después si es necesario.')) return;
             
             console.log('=== INICIO ELIMINACIÓN ===');
             console.log('Index:', index);
@@ -1250,7 +1264,7 @@
                     let desbloqueadas = 0;
                     
                     let currentDate = new Date(fechaInicio);
-                    while (currentDate < fechaFin) {
+                    while (currentDate <= fechaFin) {
                         const year = currentDate.getFullYear();
                         const mes = String(currentDate.getMonth() + 1).padStart(2, '0');
                         const dia = String(currentDate.getDate()).padStart(2, '0');
@@ -1277,6 +1291,16 @@
                 }
             }
             
+            // Mover a Google Sheets "Eliminadas" antes de borrar
+            console.log('📦 Moviendo a Reservas Eliminadas...');
+            const eliminadaExito = await moverReservaEliminada(r);
+            
+            if (eliminadaExito) {
+                console.log('✅ Movida a eliminadas');
+            } else {
+                console.warn('⚠️ No se pudo mover a eliminadas, pero continuamos');
+            }
+            
             // Eliminar de array local
             console.log('Eliminando de array local...');
             reservas.splice(index, 1);
@@ -1288,9 +1312,32 @@
             await cargarDatosGoogle();
             
             mostrarReservas();
-            mostrarAlerta('✓ Reserva eliminada', 'success');
+            mostrarAlerta('✓ Reserva eliminada y archivada', 'success');
             
             console.log('=== FIN ELIMINACIÓN ===');
+        }
+
+        async function moverReservaEliminada(reserva) {
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: JSON.stringify({
+                        accion: 'moverReservaEliminada',
+                        reserva: reserva,
+                        fechaEliminacion: new Date().toLocaleString('es-ES')
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('📥 Respuesta mover eliminada:', data);
+                return data.success;
+            } catch (error) {
+                console.error('❌ Error mover eliminada:', error);
+                return false;
+            }
         }
 
         // ===== FUNCIONES DE VALIDACIÓN =====
