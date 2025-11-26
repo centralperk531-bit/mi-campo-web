@@ -333,6 +333,25 @@
             gap: 1rem;
         }
 
+        @media (min-width: 768px) {
+            .reserva-layout {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 2rem;
+                align-items: start;
+            }
+            
+            .reserva-form {
+                grid-column: 1;
+            }
+            
+            .reserva-calendario {
+                grid-column: 2;
+                position: sticky;
+                top: 1rem;
+            }
+        }
+
         .btn {
             background: var(--color-principal);
             color: var(--color-blanco);
@@ -655,66 +674,84 @@
             
             <div id="alertContainer"></div>
             
-            <form id="reservaForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="nombre">Nombre *</label>
-                        <input type="text" id="nombre" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="dni">DNI/NIE *</label>
-                        <input type="text" id="dni" placeholder="12345678A" required maxlength="9">
-                        <div id="dniValidation" class="validation-message"></div>
-                    </div>
-                </div>
+            <div class="reserva-layout">
+                <div class="reserva-form">
+                    <form id="reservaForm">
+                        <div class="form-group">
+                            <label for="nombre">Nombre *</label>
+                            <input type="text" id="nombre" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="dni">DNI/NIE *</label>
+                            <input type="text" id="dni" placeholder="12345678A" required maxlength="9">
+                            <div id="dniValidation" class="validation-message"></div>
+                        </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="email">Email *</label>
-                        <input type="email" id="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="telefono">Teléfono *</label>
-                        <input type="tel" id="telefono" required>
-                    </div>
-                </div>
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="telefono">Teléfono *</label>
+                            <input type="tel" id="telefono" required>
+                        </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="personas">Personas *</label>
-                        <input type="number" id="personas" min="1" max="10" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="fechaEntrada">Entrada *</label>
-                        <input type="date" id="fechaEntrada" required readonly>
-                        <small style="color: #666; font-size: 0.75rem;">Usar calendario</small>
-                    </div>
-                </div>
+                        <div class="form-group">
+                            <label for="personas">Personas *</label>
+                            <input type="number" id="personas" min="1" max="10" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="fechaEntrada">Entrada *</label>
+                            <input type="date" id="fechaEntrada" required readonly>
+                            <small style="color: #666; font-size: 0.75rem;">Usar calendario →</small>
+                        </div>
 
-                <div class="form-group">
-                    <label for="fechaSalida">Salida *</label>
-                    <input type="date" id="fechaSalida" required readonly>
-                    <small style="color: #666; font-size: 0.75rem;">Usar calendario</small>
-                </div>
+                        <div class="form-group">
+                            <label for="fechaSalida">Salida *</label>
+                            <input type="date" id="fechaSalida" required readonly>
+                            <small style="color: #666; font-size: 0.75rem;">Usar calendario →</small>
+                        </div>
 
-                <div class="form-group">
-                    <label for="comentarios">Comentarios</label>
-                    <textarea id="comentarios"></textarea>
-                </div>
+                        <div class="form-group">
+                            <label for="comentarios">Comentarios</label>
+                            <textarea id="comentarios"></textarea>
+                        </div>
 
-                <div id="resumenReserva" style="background: var(--color-fondo); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: none;">
-                    <h3 style="color: var(--color-principal); margin-bottom: 0.5rem; font-size: 1rem;">💰 Resumen:</h3>
-                    <p style="font-size: 0.9rem;"><strong>Noches:</strong> <span id="resumenNoches"></span></p>
-                    <p style="font-size: 0.9rem;"><strong>Total:</strong> <span id="resumenTotal"></span>€</p>
-                    <p style="font-size: 0.9rem;"><strong>Señal:</strong> <span id="resumenSeñal"></span>€</p>
-                </div>
+                        <div id="resumenReserva" style="background: var(--color-fondo); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: none;">
+                            <h3 style="color: var(--color-principal); margin-bottom: 0.5rem; font-size: 1rem;">💰 Resumen:</h3>
+                            <p style="font-size: 0.9rem;"><strong>Noches:</strong> <span id="resumenNoches"></span></p>
+                            <p style="font-size: 0.9rem;"><strong>Total:</strong> <span id="resumenTotal"></span>€</p>
+                            <p style="font-size: 0.9rem;"><strong>Señal:</strong> <span id="resumenSeñal"></span>€</p>
+                        </div>
 
-                <div class="loader" id="loader"></div>
+                        <div class="loader" id="loader"></div>
+                        
+                        <button type="submit" class="btn" id="btnEnviar">
+                            📧 Enviar Reserva
+                        </button>
+                    </form>
+                </div>
                 
-                <button type="submit" class="btn" id="btnEnviar">
-                    📧 Enviar Reserva
-                </button>
-            </form>
+                <div class="reserva-calendario">
+                    <h3 style="color: var(--color-principal); margin-bottom: 0.8rem; font-size: 1.1rem;">📅 Selecciona fechas</h3>
+                    <p style="text-align: center; color: var(--color-secundario); margin-bottom: 0.6rem; font-size: 0.8rem;">
+                        Toca entrada y salida | <span style="color: #dc3545; cursor: pointer; font-weight: bold;" onclick="limpiarFechas()">✖️ Limpiar</span>
+                    </p>
+                    <div class="month-selector">
+                        <button type="button" onclick="cambiarMes(-1)">◀</button>
+                        <h3 id="mesActualReserva" style="font-size: 0.95rem;"></h3>
+                        <button type="button" onclick="cambiarMes(1)">▶</button>
+                    </div>
+                    <div class="calendar" id="calendarioReserva"></div>
+                    <div style="margin-top: 0.6rem; display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; font-size: 0.75rem;">
+                        <span>🟢 Libre</span>
+                        <span>🔴 Ocupado</span>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <section class="section">
@@ -754,11 +791,18 @@
                 <h2>🔐 Admin</h2>
                 <span class="close" onclick="cerrarModal('modalLoginAdmin')">&times;</span>
             </div>
-            <div class="form-group">
-                <label for="passwordAdmin">Contraseña:</label>
-                <input type="password" id="passwordAdmin">
-            </div>
-            <button class="btn" onclick="verificarPassword()">Entrar</button>
+            <form onsubmit="verificarPassword(event)">
+                <div class="form-group">
+                    <label for="passwordAdmin">Contraseña:</label>
+                    <div style="position: relative;">
+                        <input type="password" id="passwordAdmin" style="padding-right: 40px;">
+                        <button type="button" onclick="togglePassword()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem;">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn">Entrar</button>
+            </form>
         </div>
     </div>
 
@@ -822,7 +866,7 @@
         const ADMIN_PASSWORD = "micampo2025";
         
         // 🔥 CAMBIA ESTA URL POR LA TUYA
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby0r8xl-GHAQb6lCoF6YShcBzaYIHKlGk1IWkpaV2KE04DPBaDCbPxnax6a4Jpfb61y/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxV8OM98FyzUCyUhn2OOrQXY1rjAFC4jWjjvkpcPXFA9x7a5-Z7P3DtG_NwNRtolAE/exec";
 
         const CONFIG = {
             nombreCampo: "El Campo",
@@ -1044,7 +1088,8 @@
                     },
                     body: JSON.stringify({
                         accion: 'bloquearRango',
-                        fechas: fechas
+                        fechas: fechas,
+                        dni: reservas.find(r => r.fechaEntrada && fechas.includes(r.fechaEntrada.split('T')[0]))?.dni
                     })
                 });
                 
@@ -1297,29 +1342,44 @@
             const año = mesActual.getFullYear();
             const mes = mesActual.getMonth();
             
-            console.log('📆 Año:', año, 'Mes:', mes);
+            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
             
+            const mesTexto = meses[mes] + ' ' + año;
+            document.getElementById('mesActual').textContent = mesTexto;
+            
+            // También actualizar el del formulario si existe
+            const mesReserva = document.getElementById('mesActualReserva');
+            if (mesReserva) {
+                mesReserva.textContent = mesTexto;
+            }
+            
+            // Generar calendario principal
+            generarCalendarioEnElemento('calendario', año, mes);
+            
+            // Generar calendario del formulario si existe
+            const calendarioReserva = document.getElementById('calendarioReserva');
+            if (calendarioReserva) {
+                generarCalendarioEnElemento('calendarioReserva', año, mes);
+            }
+            
+            console.log('✅ === CALENDARIO GENERADO ===');
+        }
+
+        function generarCalendarioEnElemento(idElemento, año, mes) {
             const primerDia = new Date(año, mes, 1);
             const ultimoDia = new Date(año, mes + 1, 0);
             const diasMes = ultimoDia.getDate();
             const primerDiaSemana = primerDia.getDay();
             
-            console.log('📊 Días del mes:', diasMes, 'Primer día semana:', primerDiaSemana);
-            
-            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            
-            document.getElementById('mesActual').textContent = meses[mes] + ' ' + año;
-            
-            const calendario = document.getElementById('calendario');
+            const calendario = document.getElementById(idElemento);
             
             if (!calendario) {
-                console.error('❌ No se encuentra elemento #calendario');
+                console.error('❌ No se encuentra elemento #' + idElemento);
                 return;
             }
             
             calendario.innerHTML = '';
-            console.log('🗑️ Calendario limpiado');
             
             const dias = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
             dias.forEach(dia => {
@@ -1328,18 +1388,13 @@
                 header.textContent = dia;
                 calendario.appendChild(header);
             });
-            console.log('📋 Headers añadidos');
             
             for (let i = 0; i < primerDiaSemana; i++) {
                 calendario.appendChild(document.createElement('div'));
             }
-            console.log('⬜ Espacios vacíos añadidos:', primerDiaSemana);
             
             const hoy = new Date();
             hoy.setHours(0, 0, 0, 0);
-            
-            console.log('📅 Generando días del mes...');
-            let diasCreados = 0;
             
             for (let dia = 1; dia <= diasMes; dia++) {
                 const fecha = new Date(año, mes, dia);
@@ -1372,7 +1427,7 @@
                 const salidaSel = document.getElementById('fechaSalida').value;
                 
                 if (entradaSel && salidaSel) {
-                    if (fechaStr >= entradaSel && fechaStr <= salidaSel) {
+                    if (fechaStr >= entradaSel && fechaStr < salidaSel) {
                         diaDiv.classList.add('selected');
                     }
                 } else if (fechaEntradaSeleccionada === fechaStr) {
@@ -1380,7 +1435,7 @@
                 }
                 
                 if (fecha >= hoy) {
-                    if (modoAdmin) {
+                    if (modoAdmin && idElemento === 'calendario') {
                         diaDiv.addEventListener('contextmenu', function(e) {
                             e.preventDefault();
                             mostrarActionMenu(fechaStr);
@@ -1410,11 +1465,7 @@
                 }
                 
                 calendario.appendChild(diaDiv);
-                diasCreados++;
             }
-            
-            console.log('✅ Días creados:', diasCreados);
-            console.log('📅 === CALENDARIO GENERADO ===');
         }
 
         function cambiarMes(dir) {
@@ -1543,7 +1594,22 @@
             document.getElementById('modalLoginAdmin').classList.add('show');
         }
 
-        async function verificarPassword() {
+        function togglePassword() {
+            const input = document.getElementById('passwordAdmin');
+            const btn = event.target;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️';
+            }
+        }
+
+        async function verificarPassword(event) {
+            if (event) event.preventDefault();
+            
             const password = document.getElementById('passwordAdmin').value;
             if (password === ADMIN_PASSWORD) {
                 modoAdmin = true;
@@ -1551,7 +1617,7 @@
                 cerrarModal('modalLoginAdmin');
                 document.getElementById('passwordAdmin').value = '';
                 
-                await cargarReservasGoogle();
+                await cargarDatosGoogle();
                 
                 generarCalendario();
                 mostrarAlerta('✓ Modo admin activado', 'success');
