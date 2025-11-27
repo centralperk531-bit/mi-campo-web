@@ -1673,11 +1673,15 @@
                 modoAdmin = true;
                 document.getElementById('adminPanel').classList.add('show');
                 
-                // Mostrar el calendario grande en móvil también para admin
+                // EN ADMIN: Mostrar SIEMPRE el calendario grande (para botón derecho)
                 const seccionDisp = document.getElementById('seccionDisponibilidad');
                 if (seccionDisp) {
                     seccionDisp.style.display = 'block';
+                    seccionDisp.style.removeProperty('display'); // Permitir que CSS tome control
                 }
+                
+                // Añadir clase especial al body para forzar visibilidad
+                document.body.classList.add('modo-admin');
                 
                 cerrarModal('modalLoginAdmin');
                 document.getElementById('passwordAdmin').value = '';
@@ -1685,7 +1689,7 @@
                 await cargarDatosGoogle();
                 
                 generarCalendario();
-                mostrarAlerta('✓ Modo admin activado', 'success');
+                mostrarAlerta('✓ Modo admin activado. Usa botón derecho en el calendario.', 'success');
             } else {
                 mostrarAlerta('Contraseña incorrecta', 'error');
             }
@@ -1694,13 +1698,12 @@
         function cerrarAdmin() {
             modoAdmin = false;
             document.getElementById('adminPanel').classList.remove('show');
+            document.body.classList.remove('modo-admin');
             
-            // Ocultar calendario grande en PC cuando salimos de admin
-            if (window.innerWidth >= 768) {
-                const seccionDisp = document.getElementById('seccionDisponibilidad');
-                if (seccionDisp) {
-                    seccionDisp.style.display = 'none';
-                }
+            // Restaurar comportamiento normal del calendario
+            const seccionDisp = document.getElementById('seccionDisponibilidad');
+            if (seccionDisp && window.innerWidth >= 768) {
+                seccionDisp.style.display = 'none';
             }
             
             generarCalendario();
