@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Casa Paraíso - Alquiler Vacacional</title>
+    <title>El Campo - Alquiler Vacacional</title>
     <style>
         :root {
             --color-principal: #2d5016;
@@ -191,10 +191,13 @@
         }
 
         .precio-dia {
-            font-size: 0.55rem;
-            color: var(--color-secundario);
+            font-size: 0.6rem;
+            color: var(--color-principal);
             font-weight: bold;
-            margin-top: 0px;
+            margin-top: 2px;
+            background: rgba(255,255,255,0.9);
+            padding: 1px 3px;
+            border-radius: 3px;
         }
 
         .month-selector {
@@ -650,14 +653,10 @@
                     <span id="infoCapacidad"></span>
                 </div>
                 <div class="info-item">
-                    <strong>Precio/noche</strong>
-                    <span id="infoPrecio"></span>
-                </div>
-                <div class="info-item">
                     <strong>Mínimo</strong>
                     <span id="infoEstancia"></span>
                 </div>
-                <div class="info-item">
+                <div class="info-item" style="grid-column: span 2;">
                     <strong>Señal</strong>
                     <span id="infoSeñal"></span>
                 </div>
@@ -835,6 +834,36 @@
         </div>
     </div>
 
+    <div id="modalRangoIndivisible" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔗 Rango Indivisible</h2>
+                <span class="close" onclick="cerrarModal('modalRangoIndivisible')">&times;</span>
+            </div>
+            <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #666;">
+                Define un rango de fechas que NO se puede partir. Por ejemplo: Semana Santa completa.
+            </p>
+            <div class="form-group">
+                <label for="rangoInicio">Fecha inicio:</label>
+                <input type="date" id="rangoInicio" required>
+            </div>
+            <div class="form-group">
+                <label for="rangoFin">Fecha fin:</label>
+                <input type="date" id="rangoFin" required>
+            </div>
+            <div class="form-group">
+                <label for="rangoNombre">Nombre (ej: "Semana Santa 2025"):</label>
+                <input type="text" id="rangoNombre" placeholder="Semana Santa" required>
+            </div>
+            <button class="btn" onclick="guardarRangoIndivisible()">💾 Crear Rango</button>
+            
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid #ddd;">
+                <h3 style="font-size: 1rem; margin-bottom: 0.8rem;">Rangos existentes:</h3>
+                <div id="listaRangosIndivisibles"></div>
+            </div>
+        </div>
+    </div>
+
     <div id="modalReservas" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -880,15 +909,15 @@
         const ADMIN_PASSWORD = "micampo2025";
         
         // 🔥 CAMBIA ESTA URL POR LA TUYA
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_llWLzIYpMB6q6gxYh_szhQscNj7tBVA3EtVn0CuNSKICyXv2kPKAoYDRHqrEZD9t/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwWRDsD3AQGmnLcYeEo_mRvp7hYg67X9dOnjC_FxOA6-IQXG7b_-2-6X76nyb94joT-/exec";
 
         const CONFIG = {
-            nombreCampo: "Casa Paraíso",
-            descripcion: "Tu escapada perfecta",
-            capacidad: "15 personas",
-            precioPorNoche: 200,
+            nombreCampo: "El Campo",
+            descripcion: "Tu escapada rural perfecta",
+            capacidad: "6 personas",
+            precioPorNoche: 120,
             estanciaMinima: 2,
-            señalPorcentaje: 20,
+            señalPorcentaje: 30,
             tuEmail: "centralperk.531@gmail.com",
             datosPago: {
                 titular: "Tu Nombre",
@@ -907,6 +936,7 @@
         // ===== VARIABLES GLOBALES =====
         let fechasBloqueadas = [];
         let preciosPersonalizados = {};
+        let rangosIndivisibles = []; // Nuevo: rangos que no se pueden partir
         let modoAdmin = false;
         let mesActual = new Date();
         let reservas = [];
@@ -1460,10 +1490,10 @@
                 
                 const esBloqueado = fechasBloqueadas.includes(fechaStr);
                 const precioPersonalizado = preciosPersonalizados[fechaStr];
+                const precioMostrar = precioPersonalizado || CONFIG.precioPorNoche;
                 
-                if (precioPersonalizado) {
-                    diaDiv.innerHTML += '<div class="precio-dia">' + precioPersonalizado + '€</div>';
-                }
+                // SIEMPRE mostrar el precio en cada día
+                diaDiv.innerHTML += '<div class="precio-dia">' + precioMostrar + '€</div>';
                 
                 if (fecha < hoy) {
                     diaDiv.classList.add('past');
@@ -1557,6 +1587,13 @@
                 mostrarAlerta('✓ Entrada seleccionada. Ahora selecciona salida', 'success');
             } else {
                 if (fecha > fechaEntradaSeleccionada) {
+                    // Verificar si rompe algún rango indivisible
+                    const rangoRoto = verificarRangoIndivisible(fechaEntradaSeleccionada, fecha);
+                    if (rangoRoto) {
+                        mostrarAlerta('❌ No puedes partir el rango "' + rangoRoto.nombre + '" (' + rangoRoto.inicio + ' a ' + rangoRoto.fin + ')', 'error');
+                        return;
+                    }
+                    
                     salida.value = fecha;
                     calcularResumen();
                     generarCalendario();
@@ -1568,6 +1605,132 @@
                     generarCalendario();
                     mostrarAlerta('✓ Nueva entrada. Selecciona salida', 'success');
                 }
+            }
+        }
+
+        function verificarRangoIndivisible(entrada, salida) {
+            for (let rango of rangosIndivisibles) {
+                const rangoInicio = rango.inicio;
+                const rangoFin = rango.fin;
+                
+                // Si la reserva solapa parcialmente con el rango (pero no lo cubre completo)
+                const solapaParcialmente = 
+                    (entrada < rangoInicio && salida > rangoInicio && salida <= rangoFin) || // Empieza antes, termina dentro
+                    (entrada >= rangoInicio && entrada < rangoFin && salida > rangoFin) || // Empieza dentro, termina después
+                    (entrada > rangoInicio && salida < rangoFin); // Está completamente dentro pero no lo cubre todo
+                
+                if (solapaParcialmente) {
+                    return rango;
+                }
+            }
+            return null;
+        }
+
+        function mostrarModalRangoIndivisible() {
+            cerrarActionMenu();
+            actualizarListaRangos();
+            document.getElementById('modalRangoIndivisible').classList.add('show');
+        }
+
+        function actualizarListaRangos() {
+            const lista = document.getElementById('listaRangosIndivisibles');
+            if (rangosIndivisibles.length === 0) {
+                lista.innerHTML = '<p style="color: #999; font-size: 0.85rem;">No hay rangos definidos</p>';
+            } else {
+                lista.innerHTML = rangosIndivisibles.map((r, index) => 
+                    '<div style="background: #f0f0f0; padding: 0.8rem; border-radius: 6px; margin-bottom: 0.5rem; font-size: 0.85rem;">' +
+                    '<strong>' + r.nombre + '</strong><br>' +
+                    '📅 ' + r.inicio + ' → ' + r.fin +
+                    '<button class="btn btn-danger" style="padding: 0.4rem; font-size: 0.75rem; margin-top: 0.5rem; width: 100%;" onclick="eliminarRango(' + index + ')">🗑️ Eliminar</button>' +
+                    '</div>'
+                ).join('');
+            }
+        }
+
+        async function guardarRangoIndivisible() {
+            const inicio = document.getElementById('rangoInicio').value;
+            const fin = document.getElementById('rangoFin').value;
+            const nombre = document.getElementById('rangoNombre').value;
+            
+            if (!inicio || !fin || !nombre) {
+                mostrarAlerta('❌ Completa todos los campos', 'error');
+                return;
+            }
+            
+            if (inicio >= fin) {
+                mostrarAlerta('❌ La fecha fin debe ser posterior al inicio', 'error');
+                return;
+            }
+            
+            const nuevoRango = { inicio, fin, nombre };
+            
+            // Guardar en Google Sheets
+            const exito = await guardarRangoGoogle(nuevoRango);
+            
+            if (exito) {
+                rangosIndivisibles.push(nuevoRango);
+                localStorage.setItem('rangosIndivisibles', JSON.stringify(rangosIndivisibles));
+                
+                document.getElementById('rangoInicio').value = '';
+                document.getElementById('rangoFin').value = '';
+                document.getElementById('rangoNombre').value = '';
+                
+                actualizarListaRangos();
+                mostrarAlerta('✓ Rango indivisible creado: ' + nombre, 'success');
+            } else {
+                mostrarAlerta('❌ Error al guardar rango', 'error');
+            }
+        }
+
+        async function eliminarRango(index) {
+            if (!confirm('¿Eliminar este rango indivisible?')) return;
+            
+            const rango = rangosIndivisibles[index];
+            const exito = await eliminarRangoGoogle(rango);
+            
+            if (exito) {
+                rangosIndivisibles.splice(index, 1);
+                localStorage.setItem('rangosIndivisibles', JSON.stringify(rangosIndivisibles));
+                actualizarListaRangos();
+                mostrarAlerta('✓ Rango eliminado', 'success');
+            } else {
+                mostrarAlerta('❌ Error al eliminar', 'error');
+            }
+        }
+
+        async function guardarRangoGoogle(rango) {
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        accion: 'guardarRango',
+                        ...rango
+                    })
+                });
+                const data = await response.json();
+                return data.success;
+            } catch (error) {
+                console.error('❌ Error guardar rango:', error);
+                return false;
+            }
+        }
+
+        async function eliminarRangoGoogle(rango) {
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        accion: 'eliminarRango',
+                        inicio: rango.inicio
+                    })
+                });
+                const data = await response.json();
+                return data.success;
+            } catch (error) {
+                console.error('❌ Error eliminar rango:', error);
+                return false;
             }
         }
 
