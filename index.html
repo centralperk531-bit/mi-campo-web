@@ -912,8 +912,8 @@
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwWRDsD3AQGmnLcYeEo_mRvp7hYg67X9dOnjC_FxOA6-IQXG7b_-2-6X76nyb94joT-/exec";
 
         const CONFIG = {
-            nombreCampo: "Casa Paraíso",
-            descripcion: "Tu escapada perfecta",
+            nombreCampo: "El Campo",
+            descripcion: "Tu escapada rural perfecta",
             capacidad: "15 personas",
             precioPorNoche: 200,
             estanciaMinima: 2,
@@ -988,7 +988,11 @@
                 
                 if (dataPrecios.success) {
                     preciosPersonalizados = dataPrecios.precios || {};
-                    console.log('✅ Precios personalizados:', Object.keys(preciosPersonalizados).length);
+                    console.log('✅ Precios personalizados cargados:', Object.keys(preciosPersonalizados).length);
+                    console.log('📊 Precios:', preciosPersonalizados);
+                } else {
+                    console.error('❌ Error al obtener precios:', dataPrecios.message);
+                    preciosPersonalizados = {};
                 }
                 
                 if (dataReservas.success) {
@@ -1491,6 +1495,8 @@
                 const precioPersonalizado = preciosPersonalizados[fechaStr];
                 const precioMostrar = precioPersonalizado || CONFIG.precioPorNoche;
                 
+                console.log('Día ' + dia + ' (' + fechaStr + '): Precio personalizado=' + precioPersonalizado + ', Mostrar=' + precioMostrar);
+                
                 // SIEMPRE mostrar el precio en cada día
                 diaDiv.innerHTML += '<div class="precio-dia">' + precioMostrar + '€</div>';
                 
@@ -1521,14 +1527,17 @@
                 
                 if (fecha >= hoy) {
                     // Solo en el calendario principal se permite admin (botón derecho/mantener)
-                    if (modoAdmin && permitirAdmin && idElemento === 'calendario') {
+                    if (modoAdmin && permitirAdmin) {
+                        diaDiv.style.cursor = 'context-menu';
+                        
                         diaDiv.addEventListener('contextmenu', function(e) {
                             e.preventDefault();
+                            e.stopPropagation();
                             mostrarActionMenu(fechaStr);
                             return false;
                         });
                         
-                        diaDiv.addEventListener('touchstart', function() {
+                        diaDiv.addEventListener('touchstart', function(e) {
                             touchTimer = setTimeout(function() {
                                 mostrarActionMenu(fechaStr);
                             }, 600);
