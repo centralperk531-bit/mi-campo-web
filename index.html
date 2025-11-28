@@ -912,12 +912,12 @@
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwWRDsD3AQGmnLcYeEo_mRvp7hYg67X9dOnjC_FxOA6-IQXG7b_-2-6X76nyb94joT-/exec";
 
         const CONFIG = {
-            nombreCampo: "Casa Paraíso",
-            descripcion: "Tu escapada perfecta",
-            capacidad: "15 personas",
-            precioPorNoche: 200,
+            nombreCampo: "El Campo",
+            descripcion: "Tu escapada rural perfecta",
+            capacidad: "6 personas",
+            precioPorNoche: 120,
             estanciaMinima: 2,
-            señalPorcentaje: 25,
+            señalPorcentaje: 30,
             tuEmail: "centralperk.531@gmail.com",
             datosPago: {
                 titular: "Tu Nombre",
@@ -1888,39 +1888,32 @@
             if (password === ADMIN_PASSWORD) {
                 modoAdmin = true;
                 
-                // Añadir clase al body PRIMERO
+                // Añadir clase al body para activar estilos admin
                 document.body.classList.add('modo-admin');
                 
                 // Mostrar panel admin
                 document.getElementById('adminPanel').classList.add('show');
                 
-                // FORZAR visibilidad del calendario grande con !important inline
-                const seccionDisp = document.getElementById('seccionDisponibilidad');
-                if (seccionDisp) {
-                    seccionDisp.style.setProperty('display', 'block', 'important');
-                    seccionDisp.style.setProperty('background', '#fff3cd', 'important');
-                    seccionDisp.style.setProperty('border', '3px solid #ffc107', 'important');
-                    console.log('✅ Calendario grande forzado con !important inline');
-                }
-                
                 cerrarModal('modalLoginAdmin');
                 document.getElementById('passwordAdmin').value = '';
                 
                 await cargarDatosGoogle();
-                
                 generarCalendario();
                 
-                // Verificar después de generar
+                // Verificar que el calendario esté visible
                 setTimeout(() => {
+                    const seccionDisp = document.getElementById('seccionDisponibilidad');
                     const estilo = window.getComputedStyle(seccionDisp);
-                    console.log('🔍 VERIFICACIÓN FINAL - display:', estilo.display);
+                    console.log('🔍 Calendario admin display:', estilo.display);
+                    
+                    if (estilo.display === 'none') {
+                        console.error('❌ El calendario sigue oculto!');
+                    } else {
+                        console.log('✅ Calendario admin visible');
+                    }
                 }, 100);
                 
                 mostrarAlerta('✓ Admin ON. Botón derecho en calendario amarillo.', 'success');
-                
-                console.log('🔧 Modo admin activado');
-                console.log('📅 Calendario grande visible:', seccionDisp ? 'SÍ' : 'NO');
-                console.log('🎨 Body tiene clase modo-admin:', document.body.classList.contains('modo-admin'));
             } else {
                 mostrarAlerta('Contraseña incorrecta', 'error');
             }
@@ -1930,14 +1923,6 @@
             modoAdmin = false;
             document.getElementById('adminPanel').classList.remove('show');
             document.body.classList.remove('modo-admin');
-            
-            // En PC, ocultar calendario grande
-            if (window.innerWidth >= 768) {
-                const seccionDisp = document.getElementById('seccionDisponibilidad');
-                if (seccionDisp) {
-                    seccionDisp.style.display = 'none';
-                }
-            }
             
             generarCalendario();
             mostrarAlerta('✓ Modo cliente', 'success');
