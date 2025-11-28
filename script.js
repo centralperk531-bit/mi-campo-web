@@ -35,6 +35,9 @@ let reservas = [];
 let fechaSeleccionadaAdmin = null;
 let touchTimer = null;
 let fechaEntradaSeleccionada = null;
+let rangoAdminInicio = null;
+let rangoAdminFin = null;
+let bloqueosObligatorios = {}; // {inicio: fin} - rangos que deben reservarse completos
 
 // ===== INICIALIZACIÓN =====
 emailjs.init(EMAILJS_CONFIG.publicKey);
@@ -61,16 +64,18 @@ document.getElementById('totalReservas').textContent = reservas.length;
 
 async function cargarDatosGoogle() {
     try {
-        const [resFechas, resPrecios, resReservas] = await Promise.all([
+        const [resFechas, resPrecios, resReservas, resBloqueosOblig] = await Promise.all([
             fetch(GOOGLE_SCRIPT_URL + '?accion=obtenerFechasBloqueadas'),
             fetch(GOOGLE_SCRIPT_URL + '?accion=obtenerPrecios'),
-            fetch(GOOGLE_SCRIPT_URL + '?accion=obtenerReservas')
+            fetch(GOOGLE_SCRIPT_URL + '?accion=obtenerReservas'),
+            fetch(GOOGLE_SCRIPT_URL + '?accion=obtenerBloqueosObligatorios')
         ]);
         
-        const [dataFechas, dataPrecios, dataReservas] = await Promise.all([
+        const [dataFechas, dataPrecios, dataReservas, dataBloqueosOblig] = await Promise.all([
             resFechas.json(),
             resPrecios.json(),
-            resReservas.json()
+            resReservas.json(),
+            resBloqueosOblig.json()
         ]);
         
         if (dataFechas.success) {
@@ -81,6 +86,11 @@ async function cargarDatosGoogle() {
         if (dataPrecios.success) {
             preciosPersonalizados = dataPrecios.precios || {};
             console.log('✅ Precios personalizados:', Object.keys(preciosPersonalizados).length);
+        }
+        
+        if (dataBloqueosOblig.success) {
+            bloqueosObligatorios = dataBloqueosOblig.bloqueos || {};
+            console.log('✅ Bloqueos obligatorios:', Object.keys(bloqueosObligatorios).length);
         }
         
         if (dataReservas.success) {
@@ -254,7 +264,42 @@ async function moverReservaEliminada(reserva) {
     }
 }
 
-// ===== FUNCIONES DE ADMIN =====
+// ===== FUNCIONES DE ADMIN - SELECCIÓN DE RANGO =====
+
+function seleccionarRangoAdmin(fecha) {
+    if (!rangoAdminInicio) {
+        // Primera fecha seleccionada
+        rangoAdminInicio = fecha;
+        rangoAdminFin = null;
+        generarCalendario();
+        mostrarAlerta('✔ Inicio seleccionado. Ahora selecciona el fin del rango', 'success');
+    } else if (!rangoAdminFin) {
+        // Segunda fecha seleccionada
+        if (fecha > rangoAdminInicio) {
+            rangoAdminFin = fecha;
+            generarCalendario();
+            mostrarAlerta('✔ Rango seleccionado. Usa botón derecho para acciones', 'success');
+        } else {
+            // Si es anterior, reiniciar
+            rangoAdminInicio = fecha;
+            rangoAdminFin = null;
+            generarCalendario();
+            mostrarAlerta('✔ Nuevo inicio. Selecciona el fin del rango', 'success');
+        }
+    } else {
+        // Ya había un rango, reiniciar
+        rangoAdminInicio = fecha;
+        rangoAdminFin = null;
+        generarCalendario();
+        mostrarAlerta('✔ Rango limpiado. Nuevo inicio seleccionado', 'success');
+    }
+}
+
+function limpiarRangoAdmin() {
+    rangoAdminInicio = null;
+    rangoAdminFin = null;
+    generarCalendario();
+}
 
 async function bloquearFecha() {
     mostrarAlerta('⏳ Bloqueando...', 'success');
@@ -596,8 +641,24 @@ function generarCalendarioEnElemento(idElemento, año, mes, permitirAdmin) {
             diaDiv.classList.add('selected');
         }
         
+        // Marcar rango admin seleccionado
+        if (modoAdmin && rangoAdminInicio && rangoAdminFin) {
+            if (fechaStr >= rangoAdminInicio && fechaStr <= rangoAdminFin) {
+                diaDiv.classList.add('selected');
+            }
+        } else if (modoAdmin && rangoAdminInicio === fechaStr) {
+            diaDiv.classList.add('selected');
+        }
+        
         if (fecha >= hoy) {
             if (modoAdmin && permitirAdmin && idElemento === 'calendario') {
+                // Click normal para seleccionar rango
+                diaDiv.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    seleccionarRangoAdmin(fechaStr);
+                });
+                
+                // Click derecho / mantener para menú de acciones
                 diaDiv.addEventListener('contextmenu', function(e) {
                     e.preventDefault();
                     mostrarActionMenu(fechaStr);
@@ -654,6 +715,23 @@ function seleccionarFechaCliente(fecha) {
     }
     
     if (!fechaEntradaSeleccionada) {
+        // Verificar si la fecha está en un bloqueo obligatorio
+        const bloqueoOblig = Object.keys(bloqueosObligatorios).find(inicio => {
+            const fin = bloqueosObligatorios[inicio];
+            return fecha >= inicio && fecha <= fin;
+        });
+        
+        if (bloqueoOblig) {
+            const fin = bloqueosObligatorios[bloqueoOblig];
+            entrada.value = bloqueoOblig;
+            salida.value = fin;
+            fechaEntradaSeleccionada = bloqueoOblig;
+            calcularResumen();
+            generarCalendario();
+            mostrarAlerta('✔ Rango obligatorio seleccionado: ' + bloqueoOblig + ' → ' + fin, 'success');
+            return;
+        }
+        
         fechaEntradaSeleccionada = fecha;
         entrada.value = fecha;
         salida.value = '';
@@ -661,6 +739,18 @@ function seleccionarFechaCliente(fecha) {
         mostrarAlerta('✔ Entrada seleccionada. Ahora selecciona salida', 'success');
     } else {
         if (fecha > fechaEntradaSeleccionada) {
+            // Verificar si el rango cruza un bloqueo obligatorio
+            const bloqueoEnMedio = Object.keys(bloqueosObligatorios).find(inicio => {
+                const fin = bloqueosObligatorios[inicio];
+                return (fechaEntradaSeleccionada < inicio && fecha > inicio) || 
+                       (fechaEntradaSeleccionada < fin && fecha > fin);
+            });
+            
+            if (bloqueoEnMedio) {
+                mostrarAlerta('❌ No puedes reservar parcialmente un rango obligatorio', 'error');
+                return;
+            }
+            
             salida.value = fecha;
             calcularResumen();
             generarCalendario();
