@@ -394,7 +394,9 @@ async function desbloquearRangoCompleto() {
     limpiarRangoAdmin();
     await cargarDatosGoogle();
     mostrarAlerta('✔ Desbloqueadas ' + desbloqueadas + ' fechas', 'success');
-}(fecha) {
+}
+
+function seleccionarRangoAdmin(fecha) {
     if (!rangoAdminInicio) {
         // Primera fecha seleccionada
         rangoAdminInicio = fecha;
