@@ -397,6 +397,9 @@ async function desbloquearRangoCompleto() {
 }
 
 function seleccionarRangoAdmin(fecha) {
+    console.log('📅 Click en fecha admin:', fecha);
+    console.log('Estado actual - Inicio:', rangoAdminInicio, 'Fin:', rangoAdminFin);
+    
     if (!rangoAdminInicio) {
         // Primera fecha seleccionada
         rangoAdminInicio = fecha;
@@ -793,6 +796,7 @@ function generarCalendarioEnElemento(idElemento, año, mes, permitirAdmin) {
                 // Click normal para seleccionar rango
                 diaDiv.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     console.log('🖱️ Click detectado en día admin:', fechaStr);
                     seleccionarRangoAdmin(fechaStr);
                 });
