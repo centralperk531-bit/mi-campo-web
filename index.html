@@ -65,8 +65,33 @@
 
         <section class="section" style="display: none;" id="seccionDisponibilidad">
             <h2>📅 Disponibilidad</h2>
+            
+            <!-- Panel de acciones de rango admin -->
+            <div id="panelRangoAdmin" style="display: none; background: #e3f2fd; border: 2px solid #2196f3; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <p style="font-weight: bold; color: #1565c0; margin-bottom: 0.5rem;">
+                    📦 Rango seleccionado: <span id="rangoTexto"></span>
+                </p>
+                <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.8rem;">
+                    Los clientes SOLO podrán reservar este rango completo, no parcialmente.
+                </p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                    <button class="btn" style="background: #2196f3; padding: 0.7rem; font-size: 0.85rem;" onclick="crearPaqueteObligatorio()">
+                        📦 Crear Paquete Obligatorio
+                    </button>
+                    <button class="btn btn-secondary" style="padding: 0.7rem; font-size: 0.85rem;" onclick="limpiarRangoAdmin()">
+                        ✖️ Cancelar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Listado de paquetes existentes -->
+            <div id="listadoPaquetes" style="display: none; background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <h3 style="color: var(--color-principal); font-size: 1rem; margin-bottom: 0.5rem;">📦 Paquetes Obligatorios Activos:</h3>
+                <div id="paquetesContenido"></div>
+            </div>
+            
             <p style="text-align: center; color: var(--color-secundario); margin-bottom: 0.6rem; font-size: 0.8rem;">
-                Toca entrada y salida | <span style="color: #dc3545; cursor: pointer; font-weight: bold;" onclick="limpiarFechas()">✖️ Limpiar</span>
+                <span style="font-weight: bold;">ADMIN:</span> Click en 2 fechas para crear paquete | <span style="color: #dc3545; cursor: pointer; font-weight: bold;" onclick="limpiarRangoAdmin()">✖️ Limpiar</span>
             </p>
             <div class="month-selector">
                 <button onclick="cambiarMes(-1)">◀</button>
