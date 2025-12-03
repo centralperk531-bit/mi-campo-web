@@ -97,21 +97,20 @@ async function cargarDatosGoogle() {
         if (dataReservas.success) {
             const reservasGoogle = dataReservas.reservas || [];
             
-            // Limpiar fechas con hora y reindexar
-                    reservas = reservasGoogle.map((r, index) => {
-                        let fechaEntrada = r.fechaEntrada || '';
-                        let fechaSalida = r.fechaSalida || '';
-                        
-                        if (fechaEntrada.includes('T')) fechaEntrada = fechaEntrada.split('T')[0];
-                        if (fechaSalida.includes('T')) fechaSalida = fechaSalida.split('T')[0];
-                        
-                        return {
-                            ...r,
-                            fechaEntrada,
-                            fechaSalida,
-                            indiceLocal: index // Índice del array local
-                        };
-                    });
+            reservas = reservasGoogle.map((r, index) => {
+                let fechaEntrada = r.fechaEntrada || '';
+                let fechaSalida = r.fechaSalida || '';
+                
+                if (fechaEntrada.includes('T')) fechaEntrada = fechaEntrada.split('T')[0];
+                if (fechaSalida.includes('T')) fechaSalida = fechaSalida.split('T')[0];
+                
+                return {
+                    ...r,
+                    fechaEntrada,
+                    fechaSalida,
+                    indiceLocal: index
+                };
+            });
             
             localStorage.setItem('reservas', JSON.stringify(reservas));
             document.getElementById('totalReservas').textContent = reservas.length;
