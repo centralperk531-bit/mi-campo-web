@@ -82,8 +82,28 @@ async function cargarDatosGoogle() {
         }
         
         if (dataPrecios.success) {
-            preciosPersonalizados = dataPrecios.precios || {};
+            // Limpiar formato de fechas antes de usar
+            const preciosBrutos = dataPrecios.precios || {};
+            preciosPersonalizados = {};
+            
+            for (let fecha in preciosBrutos) {
+                // Convertir cualquier formato de fecha a YYYY-MM-DD
+                let fechaLimpia = fecha;
+                
+                if (fecha.includes('GMT') || fecha.includes('00:00:00')) {
+                    // Es un Date string, parsearlo
+                    const fechaObj = new Date(fecha);
+                    const year = fechaObj.getFullYear();
+                    const mes = String(fechaObj.getMonth() + 1).padStart(2, '0');
+                    const dia = String(fechaObj.getDate()).padStart(2, '0');
+                    fechaLimpia = year + '-' + mes + '-' + dia;
+                }
+                
+                preciosPersonalizados[fechaLimpia] = preciosBrutos[fecha];
+            }
+            
             console.log('✅ Precios personalizados:', Object.keys(preciosPersonalizados).length);
+            console.log('Ejemplo:', Object.keys(preciosPersonalizados)[0], '=', preciosPersonalizados[Object.keys(preciosPersonalizados)[0]]);
         }
         
         if (dataPaquetes.success) {
@@ -395,9 +415,6 @@ function limpiarRangoAdmin() {
     actualizarVisualizacionRango();
     mostrarAlerta('✔ Limpiado', 'success');
 }
-
-// CONTINÚA EN PARTE 2...
-
 // ===== FUNCIONES DE ADMIN =====
 
 async function bloquearFecha() {
