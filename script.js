@@ -670,11 +670,10 @@ function generarCalendarioEnElemento(idElemento, año, mes, permitirAdmin) {
         diaDiv.dataset.fecha = fechaStr;
         
         const esBloqueado = fechasBloqueadas.includes(fechaStr);
-        const precioPersonalizado = preciosPersonalizados[fechaStr];
         
-        if (precioPersonalizado) {
-            diaDiv.innerHTML += '<div class="precio-dia">' + precioPersonalizado + '€</div>';
-        }
+        // SIEMPRE mostrar precio (personalizado o base)
+        const precioDelDia = preciosPersonalizados[fechaStr] || CONFIG.precioPorNoche;
+        diaDiv.innerHTML += '<div class="precio-dia">' + precioDelDia + '€</div>';
         
         if (fecha < hoy) {
             diaDiv.classList.add('past');
@@ -936,6 +935,10 @@ async function verificarPassword(event) {
         const seccionReserva = document.querySelector('.section:has(#reservaForm)');
         if (seccionReserva) seccionReserva.style.setProperty('display', 'none', 'important');
         
+        // Mostrar precio base en admin
+        const itemPrecio = document.getElementById('itemPrecio');
+        if (itemPrecio) itemPrecio.style.display = 'block';
+        
         cerrarModal('modalLoginAdmin');
         document.getElementById('passwordAdmin').value = '';
         
@@ -964,6 +967,10 @@ function cerrarAdmin() {
     
     const seccionReserva = document.querySelector('.section:has(#reservaForm)');
     if (seccionReserva) seccionReserva.style.removeProperty('display');
+    
+    // Ocultar precio base al salir de admin
+    const itemPrecio = document.getElementById('itemPrecio');
+    if (itemPrecio) itemPrecio.style.display = 'none';
     
     generarCalendario();
     mostrarAlerta('✔ Modo cliente', 'success');
@@ -1062,6 +1069,7 @@ function mostrarAlerta(mensaje, tipo) {
 }
 
 // ===== ENVIAR RESERVA =====
+
 document.getElementById('reservaForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -1170,4 +1178,3 @@ window.addEventListener('DOMContentLoaded', function() {
 });
 
 console.log('✅ Sistema inicializado');
-    
