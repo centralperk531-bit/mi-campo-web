@@ -4,8 +4,7 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_llWLzIYpMB
 
 const CONFIG = {
     nombreCampo: "Casa Paraíso",
-    descripcion: "Tu escapada perfecta",
-    descripción: "VTAR/CA/03260>"
+    descripcion: "Tu escapada perfecta - VTAR/CA/03260",
     capacidad: "15 personas",
     precioPorNoche: 200,
     estanciaMinima: 2,
