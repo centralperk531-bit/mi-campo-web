@@ -6,7 +6,6 @@ const CONFIG = {
     nombreCampo: "Casa Paraíso",
     descripcion: "Tu escapada perfecta - VTAR/CA/03260",
     capacidad: "15 personas",
-    recinto: "4 habitaciones"
     precioPorNoche: 200,
     estanciaMinima: 2,
     señalPorcentaje: 25,
@@ -49,7 +48,6 @@ if (reservasGuardadas) {
 document.getElementById('headerNombre').textContent = CONFIG.nombreCampo;
 document.getElementById('headerDescripcion').textContent = CONFIG.descripcion;
 document.getElementById('infoCapacidad').textContent = CONFIG.capacidad;
-document.getElementById('infoRecinto').textContent = CONFIG.recinto;
 document.getElementById('infoPrecio').textContent = CONFIG.precioPorNoche + '€';
 document.getElementById('infoEstancia').textContent = CONFIG.estanciaMinima + ' noches';
 document.getElementById('infoSeñal').textContent = CONFIG.señalPorcentaje + '%';
