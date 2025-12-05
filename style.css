@@ -628,18 +628,24 @@ footer {
         grid-template-columns: repeat(3, 1fr);
     }
 /* ===== ENLACES ===== */
-a, a:link {
+header a, 
+header a:link,
+header a:visited,
+header a:active {
     color: #ffffff !important; /* Blanco */
-    text-decoration: underline;
+    text-decoration: underline !important;
     transition: all 0.3s;
+    -webkit-tap-highlight-color: transparent;
 }
 
-a:hover, a:active {
-    color: #d4a574 !important; /* Dorado al pasar el mouse */
+header a:hover {
+    color: #ffd700 !important; /* Amarillo dorado */
+    text-decoration: none !important;
+}
+
+/* Para otros enlaces fuera del header */
+a {
+    color: var(--color-principal);
     text-decoration: none;
-}
-
-a:visited {
-    color: #f0f0f0 !important; /* Blanco ligeramente gris */
 }
 }
