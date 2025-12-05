@@ -627,24 +627,3 @@ footer {
     .control-buttons {
         grid-template-columns: repeat(3, 1fr);
     }
-/* ===== ENLACES ===== */
-header a, 
-header a:link,
-header a:visited,
-header a:active {
-    color: #ffffff !important; /* Blanco */
-    text-decoration: underline !important;
-    transition: all 0.3s;
-    -webkit-tap-highlight-color: transparent;
-}
-
-header a:hover {
-    color: #ffd700 !important; /* Amarillo dorado */
-    text-decoration: none !important;
-}
-
-/* Para otros enlaces fuera del header */
-a {
-    color: var(--color-principal);
-    text-decoration: none;
-}
