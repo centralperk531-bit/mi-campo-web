@@ -4,25 +4,17 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_llWLzIYpMB
 
 const CONFIG = {
     nombreCampo: "Casa Paraíso",
-    descripcion: "Tu escapada perfecta",
-    descripcionLarga: "Disfruta de una estancia única en plena naturaleza, con todas las comodidades que necesitas para unas vacaciones inolvidables en familia o con amigos.",
-    enlace1: {
-        nombre: "📸 Ver Galería Completa",
-        url: "https://photos.google.com/tu-galeria"
-    },
-    enlace2: {
-        nombre: "📍 Cómo Llegar",
-        url: "https://maps.google.com/?q=tu-ubicacion"
-    },
+    descripcion: "Tu escapada perfecta - VTAR/CA/03260",
     capacidad: "15 personas",
+    habitaciones: 4,
     precioPorNoche: 200,
     estanciaMinima: 2,
-    señalPorcentaje: 20,
+    señalPorcentaje: 25,
     tuEmail: "centralperk.531@gmail.com",
     datosPago: {
-        titular: "Tu Nombre",
+        titular: "Jesús Teijeiro López",
         iban: "ES00 0000 0000 0000 0000 0000",
-        bizum: "600 123 456"
+        bizum: "+34 669 65 66 24"
     }
 };
 
@@ -56,12 +48,8 @@ if (reservasGuardadas) {
 
 document.getElementById('headerNombre').textContent = CONFIG.nombreCampo;
 document.getElementById('headerDescripcion').textContent = CONFIG.descripcion;
-document.getElementById('headerDescripcionLarga').textContent = CONFIG.descripcionLarga;
-document.getElementById('enlace1').textContent = CONFIG.enlace1.nombre;
-document.getElementById('enlace1').href = CONFIG.enlace1.url;
-document.getElementById('enlace2').textContent = CONFIG.enlace2.nombre;
-document.getElementById('enlace2').href = CONFIG.enlace2.url;
 document.getElementById('infoCapacidad').textContent = CONFIG.capacidad;
+document.getElementById('infoHabitaciones').textContent = CONFIG.habitaciones;
 document.getElementById('infoPrecio').textContent = CONFIG.precioPorNoche + '€';
 document.getElementById('infoEstancia').textContent = CONFIG.estanciaMinima + ' noches';
 document.getElementById('infoSeñal').textContent = CONFIG.señalPorcentaje + '%';
@@ -429,8 +417,6 @@ function limpiarRangoAdmin() {
     actualizarVisualizacionRango();
     mostrarAlerta('✔ Limpiado', 'success');
 }
-
-// CONTINÚA EN PARTE 2...
 // ===== FUNCIONES DE ADMIN =====
 
 async function bloquearFecha() {
