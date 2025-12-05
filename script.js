@@ -57,6 +57,9 @@ if (reservasGuardadas) {
 
 document.getElementById('headerNombre').textContent = CONFIG.nombreCampo;
 document.getElementById('headerDescripcion').textContent = CONFIG.descripcion;
+document.getElementById('headerDescripcionLarga').textContent = CONFIG.descripcionLarga;
+document.getElementById('headerEnlace1').textContent = CONFIG.enlace1;
+document.getElementById('headerEnlace2').textContent = CONFIG.enlace2;
 document.getElementById('infoCapacidad').textContent = CONFIG.capacidad;
 document.getElementById('infoHabitaciones').textContent = CONFIG.habitaciones;
 document.getElementById('infoPrecio').textContent = CONFIG.precioPorNoche + '€';
