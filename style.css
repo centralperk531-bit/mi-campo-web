@@ -628,19 +628,18 @@ footer {
         grid-template-columns: repeat(3, 1fr);
     }
 /* ===== ENLACES ===== */
-a {
-    color: #ffd700; /* Amarillo dorado brillante */
-    text-decoration: none;
-    font-weight: bold;
+a, a:link {
+    color: #ffffff !important; /* Blanco */
+    text-decoration: underline;
     transition: all 0.3s;
 }
 
-a:hover {
-    color: #ffffff; /* Blanco al pasar el mouse */
-    text-decoration: underline;
+a:hover, a:active {
+    color: #d4a574 !important; /* Dorado al pasar el mouse */
+    text-decoration: none;
 }
 
 a:visited {
-    color: #ffec8b; /* Amarillo más claro para visitados */
+    color: #f0f0f0 !important; /* Blanco ligeramente gris */
 }
 }
