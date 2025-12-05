@@ -5,7 +5,7 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_llWLzIYpMB
 const CONFIG = {
     nombreCampo: "Casa Paraíso",
     descripcion: "Tu escapada perfecta - VTAR/CA/03260",
-    descripcionLarga: "Lleva a toda la familia a este fantástico alojamiento que tiene un montón de espacio para divertirse. Paz y tranquilidad, piscina totalmente vallada para seguridad de los más pequeños. Capacidad 15 personas, 4 camas matrimonio y 7 individuales en 4 grandes habitaciones. Barbacoa,porche,cama elástica,porterias,canasta. Aparcamiento privado, buen enlace con autovía que comunica con las playas de Conil,los Caños, Zahara, Tarifa,etc... No se permiten celebraciones",  // ← Cambia esto
+    descripcionLarga: "Lleva a toda la familia a este fantástico alojamiento que tiene un montón de espacio para divertirse. Paz y tranquilidad, piscina totalmente vallada para seguridad de los más pequeños. Capacidad 15 personas, 4 camas matrimonio y 7 individuales en 4 grandes habitaciones. Barbacoa, porche, cama elástica, porterias, canasta. Aparcamiento privado, buen enlace con autovía que comunica con las playas de Conil,Los Caños, Zahara, Tarifa, etc... NO SE PERMITEN CELEBRACIONES",  // ← Cambia esto
     enlace2: {
         nombre: "📍 Cómo Llegar",  // ← Cambia el texto
         url: "https://www.google.com/maps/place/36%C2%B027'55.1%22N+6%C2%B007'45.0%22W/@36.4652963,-6.1317455,17z/data=!3m1!4b1!4m4!3m3!8m2!3d36.4652963!4d-6.1291706?hl=es&entry=ttu&g_ep=EgoyMDI1MTIwMi4wIKXMDSoASAFQAw%3D%3D"  // ← Pon tu URL real
