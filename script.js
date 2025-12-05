@@ -687,7 +687,7 @@ function generarCalendarioEnElemento(idElemento, año, mes, permitirAdmin) {
     
     calendario.innerHTML = '';
     
-    const dias = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+    const dias = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
     dias.forEach(dia => {
         const header = document.createElement('div');
         header.className = 'calendar-header';
@@ -695,7 +695,7 @@ function generarCalendarioEnElemento(idElemento, año, mes, permitirAdmin) {
         calendario.appendChild(header);
     });
     
-    for (let i = 0; i < primerDiaSemana; i++) {
+    for (let i = 0; i < (primerDiaSemana === 0 ? 6 : primerDiaSemana - 1); i++) {
         calendario.appendChild(document.createElement('div'));
     }
     
