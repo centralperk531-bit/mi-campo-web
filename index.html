@@ -44,24 +44,25 @@
                     </div>
                 </div>
             </section>
+            <!-- NUEVO: Control de Meses Completos -->
+    <div class="admin-controls" style="background: #e3f2fd; border-color: #2196f3;">
+        <h3 style="color: #1565c0;">📅 Cerrar/Abrir Mes Completo</h3>
+        <p>Bloquea o desbloquea todos los días de un mes (agenda cerrada)</p>
+    
+        <div class="form-group">
+            <label>Selecciona Mes y Año:</label>
+            <select id="selectorMesBloqueo" style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                <!-- Se genera dinámicamente con JS -->
+            </select>
         </div>
-        <!-- NUEVO: Control de Meses Completos -->
-<div class="admin-controls" style="background: #e3f2fd; border-color: #2196f3;">
-    <h3 style="color: #1565c0;">📅 Cerrar/Abrir Mes Completo</h3>
-    <p>Bloquea o desbloquea todos los días de un mes (agenda cerrada)</p>
     
-    <div class="form-group">
-        <label>Selecciona Mes y Año:</label>
-        <select id="selectorMesBloqueo" style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;">
-            <!-- Se genera dinámicamente con JS -->
-        </select>
+        <div class="control-buttons" style="grid-template-columns: 1fr 1fr;">
+            <button class="btn btn-danger" onclick="cerrarMesCompleto()">🔒 Cerrar Mes</button>
+            <button class="btn btn-success" onclick="abrirMesCompleto()">🔓 Abrir Mes</button>
+        </div>
     </div>
-    
-    <div class="control-buttons" style="grid-template-columns: 1fr 1fr;">
-        <button class="btn btn-danger" onclick="cerrarMesCompleto()">🔒 Cerrar Mes</button>
-        <button class="btn btn-success" onclick="abrirMesCompleto()">🔓 Abrir Mes</button>
-    </div>
-</div>
+        </div>
+        
 
         <section class="section">
             <h2>📸 Galería</h2>
