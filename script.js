@@ -15,10 +15,10 @@ const CONFIG = {
     precioPorNoche: 200,
     estanciaMinima: 2,
     señalPorcentaje: 25,
-    tuEmail: "vtar.paraisochiclana@gmail.rom",
+    tuEmail: "vtar.paraisochiclana@gmail.com",
     datosPago: {
         titular: "Jesús Teijeiro López",
-        iban: "ES00 0000 0000 0000 0000 0000",
+        iban: "ES33 3187 0129 1153 7491 1328",
         bizum: "+34 669 65 66 24"
     }
 };
