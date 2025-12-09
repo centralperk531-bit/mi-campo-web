@@ -987,6 +987,7 @@ async function verificarPassword(event) {
         generarCalendario();
         
         mostrarAlerta('✔ Modo admin. Haz CLICK en 2 fechas para paquete', 'success');
+        generarSelectorMeses();
     } else {
         mostrarAlerta('Contraseña incorrecta', 'error');
     }
