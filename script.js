@@ -987,7 +987,8 @@ async function verificarPassword(event) {
         generarCalendario();
         
         mostrarAlerta('✔ Modo admin. Haz CLICK en 2 fechas para paquete', 'success');
-   } else {
+        generarSelectorMeses();
+    } else {
         mostrarAlerta('Contraseña incorrecta', 'error');
     }
 }
@@ -1217,7 +1218,64 @@ window.addEventListener('DOMContentLoaded', function() {
     console.log('🔗 Google Script:', GOOGLE_SCRIPT_URL);
     cargarDatosGoogle();
 });
+// ===== BLOQUEO DE MESES COMPLETOS =====
 
+function generarSelectorMeses() {
+    const selector = document.getElementById('selectorMesBloqueo');
+    if (!selector) return;
+    
+    const hoy = new Date();
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    
+    selector.innerHTML = '';
+    
+    // Generar opciones para los próximos 24 meses
+    for (let i = 0; i < 24; i++) {
+        const fecha = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+        const mes = fecha.getMonth();
+        const año = fecha.getFullYear();
+        
+        const option = document.createElement('option');
+        option.value = año + '-' + String(mes + 1).padStart(2, '0');
+        option.textContent = meses[mes] + ' ' + año;
+        
+        selector.appendChild(option);
+    }
+}
+
+async function cerrarMesCompleto() {
+    const selector = document.getElementById('selectorMesBloqueo');
+    if (!selector || !selector.value) return;
+    
+    const [año, mes] = selector.value.split('-').map(Number);
+    const mesTexto = selector.options[selector.selectedIndex].text;
+    
+    if (!confirm('🔒 ¿Cerrar TODO ' + mesTexto + '?\n\nSe bloquearán TODOS los días del mes.')) return;
+    
+    mostrarAlerta('⏳ Cerrando ' + mesTexto + '...', 'success');
+    
+    // Calcular todos los días del mes
+    const primerDia = new Date(año, mes - 1, 1);
+    const ultimoDia = new Date(año, mes, 0);
+    const diasDelMes = ultimoDia.getDate();
+    
+    const fechasABloquear = [];
+    
+    for (let dia = 1; dia <= diasDelMes; dia++) {
+        const fechaStr = año + '-' + String(mes).padStart(2, '0') + '-' + String(dia).padStart(2, '0');
+        
+        // Solo añadir si no está ya bloqueada
+        if (!fechasBloqueadas.includes(fechaStr)) {
+            fechasABloquear.push(fechaStr);
+        }
+    }
+    
+    if (fechasABloquear.length === 0) {
+        mostrarAlerta('✔ Ya está cerrado', 'success');
+        return;
+    }
+    
     // Guardar todas las fechas en Google Sheets
     const promesas = fechasABloquear.map(fecha => guardarFechaBloqueada(fecha));
     const resultados = await Promise.all(promesas);
@@ -1230,6 +1288,63 @@ window.addEventListener('DOMContentLoaded', function() {
         mostrarAlerta('✔ Cerrado: ' + mesTexto + ' (' + exitosos + ' días)', 'success');
     } else {
         mostrarAlerta('❌ Error al cerrar mes', 'error');
+    }
+}
+
+async function abrirMesCompleto() {
+    const selector = document.getElementById('selectorMesBloqueo');
+    if (!selector || !selector.value) return;
+    
+    const [año, mes] = selector.value.split('-').map(Number);
+    const mesTexto = selector.options[selector.selectedIndex].text;
+    
+    if (!confirm('🔓 ¿Abrir TODO ' + mesTexto + '?\n\nSe desbloquearán TODOS los días del mes (excepto reservas confirmadas).')) return;
+    
+    mostrarAlerta('⏳ Abriendo ' + mesTexto + '...', 'success');
+    
+    // Calcular todos los días del mes
+    const primerDia = new Date(año, mes - 1, 1);
+    const ultimoDia = new Date(año, mes, 0);
+    const diasDelMes = ultimoDia.getDate();
+    
+    const fechasADesbloquear = [];
+    
+    for (let dia = 1; dia <= diasDelMes; dia++) {
+        const fechaStr = año + '-' + String(mes).padStart(2, '0') + '-' + String(dia).padStart(2, '0');
+        
+        // Solo desbloquear si está bloqueada y no es de una reserva
+        const esReserva = reservas.some(r => {
+            if (!r.confirmada) return false;
+            const entrada = r.fechaEntrada.split('T')[0];
+            const salida = r.fechaSalida.split('T')[0];
+            return fechaStr >= entrada && fechaStr < salida;
+        });
+        
+        if (fechasBloqueadas.includes(fechaStr) && !esReserva) {
+            fechasADesbloquear.push(fechaStr);
+        }
+    }
+    
+    if (fechasADesbloquear.length === 0) {
+        mostrarAlerta('✔ No hay días para abrir', 'success');
+        return;
+    }
+    
+    // Eliminar todas las fechas de Google Sheets
+    const promesas = fechasADesbloquear.map(fecha => eliminarFechaBloqueada(fecha));
+    const resultados = await Promise.all(promesas);
+    
+    const exitosos = resultados.filter(r => r).length;
+    
+    if (exitosos > 0) {
+        fechasADesbloquear.forEach(fecha => {
+            const index = fechasBloqueadas.indexOf(fecha);
+            if (index > -1) fechasBloqueadas.splice(index, 1);
+        });
+        await cargarDatosGoogle();
+        mostrarAlerta('✔ Abierto: ' + mesTexto + ' (' + exitosos + ' días)', 'success');
+    } else {
+        mostrarAlerta('❌ Error al abrir mes', 'error');
     }
 }
 
