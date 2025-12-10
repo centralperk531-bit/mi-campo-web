@@ -1,5 +1,5 @@
 // ===== CONFIGURACIÓN =====
-const ADMIN_PASSWORD = "micampo2025";
+const ADMIN_PASSWORD = "Jesus170385";
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_llWLzIYpMB6q6gxYh_szhQscNj7tBVA3EtVn0CuNSKICyXv2kPKAoYDRHqrEZD9t/exec";
 
 const CONFIG = {
